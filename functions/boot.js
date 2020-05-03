@@ -1,18 +1,15 @@
-const CacheAsset = require('@11ty/eleventy-cache-assets');
+const axios = require('axios');
 var Particle = require('particle-api-js');
 var particle = new Particle();
 
 exports.handler = function(event, context, callback) {
-  CacheAsset(process.env.BIN_URL, {
-    duration: '1h',
-    type: 'json',
-    fetchOptions: {
+  axios
+    .get(process.env.BIN_URL, {
       headers: {
         'secret-key': process.env.BIN_TOKEN,
       },
-    },
-  })
-    .then(data => {
+    })
+    .then(({ data }) => {
       return particle.callFunction({
         deviceId: process.env.PARTICLE_DEVICE,
         name: 'setFoodTime',
