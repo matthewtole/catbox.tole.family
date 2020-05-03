@@ -17,6 +17,7 @@ exports.handler = function(event, context, callback) {
         auth: process.env.PARTICLE_TOKEN,
       });
     })
+    .catch(ex => console.error(ex))
     .finally(() => {
       callback();
     });
