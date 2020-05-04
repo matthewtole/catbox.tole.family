@@ -1,3 +1,7 @@
-# eleventy-tailwind-starter
+# catbox.tole.family
 
-My starter template for building a site with Eleventy and Tailwind CSS
+A 3D printed hardware device that reminds us to take care of our cats!
+
+## Website
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/39f8516b-e269-4a86-81af-1223ffc13798/deploy-status)](https://app.netlify.com/sites/agitated-beaver-f3d2fa/deploys)
