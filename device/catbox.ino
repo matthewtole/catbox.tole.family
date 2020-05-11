@@ -13,8 +13,8 @@
 #define PIN_BUTTON_WATER 4
 #define PIN_BUTTON_FOOD 5
 
-#define WATER_SECONDS 24 * 7 * 1 * 60 * 60
-#define FOOD_SECONDS 24 * 7 * 2 * 60 * 60
+#define WATER_SECONDS 24 * 6 * 60 * 60
+#define FOOD_SECONDS 24 * 14 * 60 * 60
 #define POOP_WARN_SECONDS 48 * 60 * 60
 #define POOP_SECONDS 60 * 60 * 60
 
@@ -26,8 +26,6 @@ ClickButton buttonWater(PIN_BUTTON_WATER, LOW, CLICKBTN_PULLUP);
 int timePoop;
 int timeWater;
 int timeFood;
-
-// bool success = Particle.function("funcKey", funcName);
 
 int setPoopTime(String timestamp) {
     timePoop = timestamp.toInt();
