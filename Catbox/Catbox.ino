@@ -26,6 +26,8 @@ struct Panel {
   uint8_t mode;
   time_t lastPress;
   uint32_t delay;
+  Adafruit_NeoPixel* leds;
+  AceButton* button;
 };
 
 #ifdef DEBUG_DELAY
@@ -34,7 +36,7 @@ struct Panel {
 #define DELAY_FOOD 24 * 14 * 60 * 60
 #endif
 
-struct Panel panels[] = { { 0, 2, 0, Adafruit_NeoPixel::Color(0, 100, 0), MODE_ON, 0, DELAY_FOOD } };
+struct Panel panels[] = { { 0, 2, 0, Adafruit_NeoPixel::Color(0, 100, 0), MODE_ON, 0, DELAY_FOOD, NULL, NULL } };
 
 Adafruit_NeoPixel ledsFood(LED_COUNT, 2, NEO_GRB + NEO_KHZ800);
 AceButton buttonFood(panels[0].pinButton, HIGH, ID_FOOD);
@@ -85,14 +87,14 @@ void setupWifi() {
 }
 
 void setupPanel(Panel* panel) {
-  Adafruit_NeoPixel* leds = getLeds(panel->id);
-  AceButton* button = getButton(panel->id);
+  panel->leds = new Adafruit_NeoPixel(LED_COUNT, panel->pinLeds, NEO_GRB + NEO_KHZ800);
+  panel->button = new AceButton(panel->pinButton, HIGH, panel->id);
 
-  leds->begin();
-  leds->setBrightness(100);
+  panel->leds->begin();
+  panel->leds->setBrightness(100);
 
   pinMode(panel->pinButton, INPUT);
-  ButtonConfig* buttonConfig = button->getButtonConfig();
+  ButtonConfig* buttonConfig = panel->button->getButtonConfig();
   buttonConfig->setEventHandler(handleEvent);
   buttonConfig->setFeature(ButtonConfig::kFeatureClick);
   buttonConfig->setFeature(ButtonConfig::kFeatureDoubleClick);
@@ -100,16 +102,13 @@ void setupPanel(Panel* panel) {
 }
 
 void loopPanel(Panel* panel) {
-  Adafruit_NeoPixel* leds = getLeds(panel->id);
-  AceButton* button = getButton(panel->id);
-
-  leds->clear();
+  panel->leds->clear();
   if (panel->mode == MODE_ON) {
-    leds->fill(panel->color);
+    panel->leds->fill(panel->color);
   }
-  leds->show();
+  panel->leds->show();
 
-  button->check();
+  panel->button->check();
 
   if (now() >= panel->lastPress + panel->delay) {
     panel->mode = MODE_ON;
@@ -175,22 +174,3 @@ Panel* getPanel(uint8_t id) {
   return &panels[id];
 }
 
-Adafruit_NeoPixel* getLeds(uint8_t id) {
-  switch (id) {
-    case ID_FOOD:
-      return &ledsFood;
-      break;
-    default:
-      return NULL;
-  }
-}
-
-AceButton* getButton(uint8_t id) {
-  switch (id) {
-    case ID_FOOD:
-      return &buttonFood;
-      break;
-    default:
-      return NULL;
-  }
-}
