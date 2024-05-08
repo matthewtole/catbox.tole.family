@@ -7,16 +7,23 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
-#include <ELog.h>
+#include "secrets.h"
+#include <ESPmDNS.h>
 
 using namespace ace_button;
 
-Elog log;
-
+// If defined, all of the panels will use very short delays
 #define DEBUG_DELAY
-#define LOG_LEVEL DEBUG
 
+#ifdef DEBUG_DELAY
+#define DELAY_FOOD 5
+#else
+#define DELAY_FOOD 60 * 60 * 24 * 14 // 14 days
+#endif
+
+// Each panel has an LED strip length 3
 #define LED_COUNT 3
+
 #define NUM_PANELS 1
 
 #define MODE_ON 0
@@ -47,18 +54,12 @@ struct Panel {
   AceButton* button;
 };
 
-#ifdef DEBUG_DELAY
-#define DELAY_FOOD 5
-#else
-#define DELAY_FOOD 24 * 14 * 60 * 60
-#endif
-
 struct Panel panels[] = { { 0, 2, 0, Adafruit_NeoPixel::Color(0, 100, 0), MODE_ON, 0, DELAY_FOOD, NULL, NULL } };
 
 Adafruit_NeoPixel ledStatus(1, 22, NEO_GRB + NEO_KHZ800);
 
-const char* ssid = "";
-const char* password = "";
+const char* ssid = WIFI_SSID;
+const char* password = WIFI_PASSWORD;
 String serverName = "";
 
 AsyncWebServer server(80);
@@ -70,15 +71,14 @@ void changeStatusColor(uint32_t color) {
 }
 
 void setup() {
-  Serial.begin(115200);
-  log.addSerialLogging(Serial, "CatBox", LOG_LEVEL);
+  Serial.begin(9600);
 
   ledStatus.begin();
   changeStatusColor(Adafruit_NeoPixel::Color(180, 90, 0));
   for (uint8_t p = 0; p < NUM_PANELS; p = p + 1) {
     setupPanel(&panels[p]);
   }
-  setupWifi();  
+  setupWifi();
 }
 
 void loop() {
@@ -90,15 +90,27 @@ void loop() {
 void setupWifi() {
   WiFi.begin(ssid, password);
   WiFi.mode(WIFI_STA);
-  log.log(DEBUG,  "Connecting...");
+  Serial.print("Connecting...");
   while (WiFi.status() != WL_CONNECTED) {
-    log.log(DEBUG, "...");
+    Serial.print(".");
     delay(500);
   }
-  log.log(INFO, "Connected to WiFi network with IP Address: %s" + WiFi.localIP().toString());
+  Serial.println();
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  if (!MDNS.begin("catbox")) {
+    Serial.println("Error setting up MDNS responder!");
+    while (1) {
+      delay(1000);
+    }
+  }
+  Serial.print("mDNS responder started at ");
+  Serial.println("catbox.local");
+
   changeStatusColor(Adafruit_NeoPixel::Color(0, 180, 0));
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
     request->send(200, "text/plain", "Hi! I am ESP32.");
   });
 
@@ -153,21 +165,25 @@ int httpRequest(String url) {
   }
   HTTPClient http;
   http.begin(url.c_str());
+  Serial.println(url);
   int res = http.GET();
   if (res > 0) {
-    log.log(DEBUG, "HTTP Response code: %d", res);
+    Serial.print("HTTP Response code: ");
+    Serial.println(res);
     String payload = http.getString();
-    log.log(DEBUG, payload);
+    Serial.println(payload);
   } else {
-    log.log(ERROR, "Error code: %d", res);
+    Serial.print("Error code: ");
+    Serial.println(res);
   }
   http.end();
   return res;
 }
 
 void handleClick(uint8_t id) {
-  log.log(DEBUG, "Click: %d", id);
-  
+  Serial.print("Click: ");
+  Serial.println(id);
+
   Panel* panel = getPanel(id);
   panel->mode = MODE_OFF;
   panel->lastPress = now();
@@ -176,10 +192,10 @@ void handleClick(uint8_t id) {
 }
 
 void handleDoubleClick(uint8_t id) {
-  log.log(DEBUG, "Double Click: %d", id);
+  Serial.print("Click: ");
+  Serial.println(id);
 }
 
 Panel* getPanel(uint8_t id) {
   return &panels[id];
 }
-
