@@ -1,3 +1,6 @@
+Catbox/build
+Catbox/secrets.h
+
 # Logs
 logs
 *.log
