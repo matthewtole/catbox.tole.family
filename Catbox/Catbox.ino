@@ -39,22 +39,25 @@ struct Panel panels[] = { { 0, 2, 0, Adafruit_NeoPixel::Color(0, 100, 0), MODE_O
 Adafruit_NeoPixel ledsFood(LED_COUNT, 2, NEO_GRB + NEO_KHZ800);
 AceButton buttonFood(panels[0].pinButton, HIGH, ID_FOOD);
 
+Adafruit_NeoPixel ledStatus(1, 22, NEO_GRB + NEO_KHZ800);
+
 const char* ssid = "";
 const char* password = "";
 String serverName = "";
 
-void setup() {
-#ifdef SERIAL_ENABLED
-  Serial.begin(9600);
+void changeStatusColor(uint32_t color) {
+  ledStatus.clear();
+  ledStatus.fill(color);
+  ledStatus.show();
+}
 
-  Serial.print("IP: ");
-  Serial.println(WiFi.localIP());
-#endif
+void setup() {
+  ledStatus.begin();
+  changeStatusColor(Adafruit_NeoPixel::Color(180, 90, 0));
   for (uint8_t p = 0; p < NUM_PANELS; p = p + 1) {
     setupPanel(&panels[p]);
   }
-
-  setupWifi();
+  setupWifi();  
 }
 
 void loop() {
@@ -78,6 +81,7 @@ void setupWifi() {
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
   #endif
+  changeStatusColor(Adafruit_NeoPixel::Color(0, 180, 0));
 }
 
 void setupPanel(Panel* panel) {
@@ -125,6 +129,7 @@ void handleEvent(AceButton* button, uint8_t eventType, uint8_t buttonState) {
 
 int httpRequest(String url) {
   if (WiFi.status() != WL_CONNECTED) {
+    changeStatusColor(Adafruit_NeoPixel::Color(180, 0, 0));
     return -1000;
   }
   HTTPClient http;
