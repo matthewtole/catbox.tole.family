@@ -23,16 +23,27 @@ Elog log;
 #define MODE_OFF 1
 
 #define ID_FOOD 0
+#define ID_POOP 1
+#define ID_WATER 2
 
 struct Panel {
+  // Panel ID
   uint8_t id;
+  // GPIO pin for the LEDs
   uint8_t pinLeds;
+  // GPIO pin for the button
   uint8_t pinButton;
+  // Color of the LEDs
   uint32_t color;
+  // Current mode of the panel
   uint8_t mode;
+  // Last time the button was pressed
   time_t lastPress;
+  // Delay in seconds before the panel goes back to MODE_ON
   uint32_t delay;
+  // LED manager
   Adafruit_NeoPixel* leds;
+  // Button manager
   AceButton* button;
 };
 
@@ -43,9 +54,6 @@ struct Panel {
 #endif
 
 struct Panel panels[] = { { 0, 2, 0, Adafruit_NeoPixel::Color(0, 100, 0), MODE_ON, 0, DELAY_FOOD, NULL, NULL } };
-
-Adafruit_NeoPixel ledsFood(LED_COUNT, 2, NEO_GRB + NEO_KHZ800);
-AceButton buttonFood(panels[0].pinButton, HIGH, ID_FOOD);
 
 Adafruit_NeoPixel ledStatus(1, 22, NEO_GRB + NEO_KHZ800);
 
@@ -145,17 +153,16 @@ int httpRequest(String url) {
   }
   HTTPClient http;
   http.begin(url.c_str());
-  int httpResponseCode = http.GET();
-  if (httpResponseCode > 0) {
-    log.log(DEBUG, "HTTP Response code: %d", httpResponseCode);
+  int res = http.GET();
+  if (res > 0) {
+    log.log(DEBUG, "HTTP Response code: %d", res);
     String payload = http.getString();
     log.log(DEBUG, payload);
   } else {
-    log.log(ERROR, "Error code: %d", httpResponseCode);
+    log.log(ERROR, "Error code: %d", res);
   }
-  #endif
   http.end();
-  return httpResponseCode;
+  return res;
 }
 
 void handleClick(uint8_t id) {
