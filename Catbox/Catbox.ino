@@ -4,11 +4,17 @@
 #include <TimeLib.h>
 #include <HTTPClient.h>
 #include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncElegantOTA.h>
+#include <ELog.h>
 
 using namespace ace_button;
 
+Elog log;
+
 #define DEBUG_DELAY
-#define SERIAL_ENABLED
+#define LOG_LEVEL DEBUG
 
 #define LED_COUNT 3
 #define NUM_PANELS 1
@@ -47,6 +53,8 @@ const char* ssid = "";
 const char* password = "";
 String serverName = "";
 
+AsyncWebServer server(80);
+
 void changeStatusColor(uint32_t color) {
   ledStatus.clear();
   ledStatus.fill(color);
@@ -54,6 +62,9 @@ void changeStatusColor(uint32_t color) {
 }
 
 void setup() {
+  Serial.begin(115200);
+  log.addSerialLogging(Serial, "CatBox", LOG_LEVEL);
+
   ledStatus.begin();
   changeStatusColor(Adafruit_NeoPixel::Color(180, 90, 0));
   for (uint8_t p = 0; p < NUM_PANELS; p = p + 1) {
@@ -70,20 +81,21 @@ void loop() {
 
 void setupWifi() {
   WiFi.begin(ssid, password);
-  #ifdef SERIAL_ENABLED
-  Serial.println("Connecting");
-  #endif
+  WiFi.mode(WIFI_STA);
+  log.log(DEBUG,  "Connecting...");
   while (WiFi.status() != WL_CONNECTED) {
+    log.log(DEBUG, "...");
     delay(500);
-    #ifdef SERIAL_ENABLED
-    Serial.print(".");
-    #endif
   }
-  #ifdef SERIAL_ENABLED
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
-  #endif
+  log.log(INFO, "Connected to WiFi network with IP Address: %s" + WiFi.localIP().toString());
   changeStatusColor(Adafruit_NeoPixel::Color(0, 180, 0));
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Hi! I am ESP32.");
+  });
+
+  AsyncElegantOTA.begin(&server);
+  server.begin();
 }
 
 void setupPanel(Panel* panel) {
@@ -134,28 +146,21 @@ int httpRequest(String url) {
   HTTPClient http;
   http.begin(url.c_str());
   int httpResponseCode = http.GET();
-  #ifdef SERIAL_ENABLED
   if (httpResponseCode > 0) {
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
+    log.log(DEBUG, "HTTP Response code: %d", httpResponseCode);
     String payload = http.getString();
-    Serial.println(payload);
+    log.log(DEBUG, payload);
   } else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
+    log.log(ERROR, "Error code: %d", httpResponseCode);
   }
   #endif
   http.end();
   return httpResponseCode;
 }
 
-
-
 void handleClick(uint8_t id) {
-#ifdef SERIAL_ENABLED
-  Serial.print("Click: ");
-  Serial.println(id);
-#endif
+  log.log(DEBUG, "Click: %d", id);
+  
   Panel* panel = getPanel(id);
   panel->mode = MODE_OFF;
   panel->lastPress = now();
@@ -164,10 +169,7 @@ void handleClick(uint8_t id) {
 }
 
 void handleDoubleClick(uint8_t id) {
-#ifdef SERIAL_ENABLED
-  Serial.print("Double Click: ");
-  Serial.println(id);
-#endif
+  log.log(DEBUG, "Double Click: %d", id);
 }
 
 Panel* getPanel(uint8_t id) {
