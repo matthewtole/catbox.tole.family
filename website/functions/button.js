@@ -1,3 +1,3 @@
-exports.handler = function(event, context, callback) {
-  // your server-side functionality
-}
+export default async (req, context) => {
+  return new Response("Hello, world!");
+};
