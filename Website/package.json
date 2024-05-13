@@ -1,0 +1,11 @@
+{
+  "name": "catbox.tole.family",
+  "version": "1.0.0",
+  "description": "The web server and UI for the Catbox project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
