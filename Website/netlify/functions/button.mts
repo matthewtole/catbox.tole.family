@@ -1,6 +1,5 @@
-
 import axios from "axios";
-import type { Context } from "@netlify/functions"
+import type { Context } from "@netlify/functions";
 
 const JSONBIN_KEY = process.env.JSONBIN_KEY;
 const JSONBIN_ID = "5eae3b8a47a2266b1471cb78";
@@ -16,5 +15,5 @@ export default async (req: Request, context: Context) => {
       "X-Access-Key": JSONBIN_KEY,
     },
   });
-  return new Response(JSON.stringify(res));
+  return new Response(JSON.stringify(res.data));
 };
