@@ -35,14 +35,16 @@ export default async (req: Request, context: Context) => {
   const data = res.data.record as Data;
   data[ID_TO_KEY[id]].lastPressed = Date.now();
 
-  await axios({
+  const res2 = await axios({
     method: "PUT",
     url: `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,
     headers: {
       "X-Access-Key": JSONBIN_KEY,
+      'Content-Type': 'application/json'
     },
     data,
   });
+  console.log(res2);
 
   return new Response(data[ID_TO_KEY[id]].lastPressed);
 };
