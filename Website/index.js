@@ -35,7 +35,7 @@ async function fetchData() {
 }
 
 function boot() {
-  setInterval(fetchData, 1000);
+  setInterval(fetchData, 10000);
   fetchData().catch((err) => console.error(err));
 }
 
