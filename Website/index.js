@@ -5,15 +5,15 @@ const refresh = document.getElementById("refresh");
 const panels = {
   poop: {
     element: document.querySelector(".panel[data-id='poop']"),
-    delay: 5000,
+    delay: 20000,
   },
   water: {
     element: document.querySelector(".panel[data-id='water']"),
-    delay: 5000,
+    delay: 20000,
   },
   food: {
     element: document.querySelector(".panel[data-id='food']"),
-    delay: 5000,
+    delay: 20000,
   },
 };
 
@@ -42,7 +42,7 @@ async function fetchData() {
 }
 
 function boot() {
-  setInterval(fetchData, 10000);
+  setInterval(fetchData, 5000);
   fetchData().catch((err) => console.error(err));
   refresh.addEventListener("click", fetchData);
 }
