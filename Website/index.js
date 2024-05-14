@@ -4,9 +4,15 @@ const panelFood = document.querySelector(".panel[data-id='food']");
 
 async function fetchData() {
   const res = await axios.get("/.netlify/functions/data");
-  panelPoop.querySelector(".time").innerText = res.data.poop.lastPressed;
-  panelWater.querySelector(".time").innerText = res.data.water.lastPressed;
-  panelFood.querySelector(".time").innerText = res.data.food.lastPressed;
+  panelPoop.querySelector(".time").innerText = DateTime.fromMillis(
+    res.data.poop.lastPressed
+  ).toLocaleString(DateTime.DATETIME_MED);
+  panelWater.querySelector(".time").innerText = DateTime.fromMillis(
+    res.data.water.lastPressed
+  ).toLocaleString(DateTime.DATETIME_MED);
+  panelFood.querySelector(".time").innerText = DateTime.fromMillis(
+    res.data.food.lastPressed
+  ).toLocaleString(DateTime.DATETIME_MED);
 }
 
 fetchData().catch((err) => console.error(err));
