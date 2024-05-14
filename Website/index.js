@@ -1,19 +1,29 @@
 const { DateTime } = luxon;
 
 const panels = {
-  poop: document.querySelector(".panel[data-id='poop']"),
-  water: document.querySelector(".panel[data-id='water']"),
-  food: document.querySelector(".panel[data-id='food']"),
+  poop: {
+    element: document.querySelector(".panel[data-id='poop']"),
+    delay: 5000,
+  },
+  water: {
+    element: document.querySelector(".panel[data-id='water']"),
+    delay: 5000,
+  },
+  food: {
+    element: document.querySelector(".panel[data-id='food']"),
+    delay: 5000,
+  },
 };
 
 function updatePanel(id, data) {
-  panels[id].querySelector(".time").innerText = DateTime.fromMillis(
+  const element = panels[id].element;
+  element.querySelector(".time").innerText = DateTime.fromMillis(
     data.lastPressed
   ).toRelative();
-  if (Math.random() > 0.5) {
-    panels[id].setAttribute("data-mode", "on");
+  if (data.lastPressed - Date.now() < panels[id].delay) {
+    element.setAttribute("data-mode", "on");
   } else {
-    panels[id].setAttribute("data-mode", "off");
+    element.setAttribute("data-mode", "off");
   }
 }
 
