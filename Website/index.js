@@ -1,5 +1,7 @@
 const { DateTime } = luxon;
 
+const refresh = document.getElementById("refresh");
+
 const panels = {
   poop: {
     element: document.querySelector(".panel[data-id='poop']"),
@@ -28,15 +30,21 @@ function updatePanel(id, data) {
 }
 
 async function fetchData() {
+  if (refresh.classList.contains("active")) {
+    return;
+  }
+  refresh.classList.add("active");
   const res = await axios.get("/.netlify/functions/data");
   updatePanel("poop", res.data.poop);
   updatePanel("water", res.data.water);
   updatePanel("food", res.data.food);
+  refresh.classList.remove("active");
 }
 
 function boot() {
   setInterval(fetchData, 10000);
   fetchData().catch((err) => console.error(err));
+  refresh.addEventListener("click", fetchData);
 }
 
 boot();

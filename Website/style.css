@@ -55,3 +55,39 @@ body {
 [data-id="food"][data-mode="on"] .svg-container {
   color: rgb(27, 94, 32);
 }
+
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(1turn);
+    transform: rotate(1turn);
+  }
+}
+
+#refresh {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+#refresh.active svg {
+  animation-name: spin;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+#refresh:hover {
+  color: darkblue;
+}
+
+#refresh svg {
+  width: 24px;
+  height: 24px;
+}
