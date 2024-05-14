@@ -4,9 +4,9 @@ const panelFood = document.querySelector(".panel[data-id='food']");
 
 async function fetchData() {
   const res = await axios.get("/.netlify/functions/data");
-  panelPoop.querySelector("time").innerText = res.data.poop.lastPressed;
-  panelWater.querySelector("time").innerText = res.data.water.lastPressed;
-  panelFood.querySelector("time").innerText = res.data.food.lastPressed;
+  panelPoop.querySelector(".time").innerText = res.data.poop.lastPressed;
+  panelWater.querySelector(".time").innerText = res.data.water.lastPressed;
+  panelFood.querySelector(".time").innerText = res.data.food.lastPressed;
 }
 
 fetchData().catch((err) => console.error(err));
