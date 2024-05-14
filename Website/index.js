@@ -1,20 +1,27 @@
 const { DateTime } = luxon;
 
-const panelPoop = document.querySelector(".panel[data-id='poop']");
-const panelWater = document.querySelector(".panel[data-id='water']");
-const panelFood = document.querySelector(".panel[data-id='food']");
+const panels = {
+  poop: document.querySelector(".panel[data-id='poop']"),
+  water: document.querySelector(".panel[data-id='water']"),
+  food: document.querySelector(".panel[data-id='food']"),
+};
+
+function updatePanel(id, data) {
+  panels[id].querySelector(".time").innerText = DateTime.fromMillis(
+    data.lastPressed
+  ).toRelative();
+  if (Math.random() > 0.5) {
+    panels[id].setAttribute("data-mode", "on");
+  } else {
+    panels[id].setAttribute("data-mode", "off");
+  }
+}
 
 async function fetchData() {
   const res = await axios.get("/.netlify/functions/data");
-  panelPoop.querySelector(".time").innerText = DateTime.fromMillis(
-    res.data.poop.lastPressed
-  ).toLocaleString(DateTime.DATETIME_MED);
-  panelWater.querySelector(".time").innerText = DateTime.fromMillis(
-    res.data.water.lastPressed
-  ).toLocaleString(DateTime.DATETIME_MED);
-  panelFood.querySelector(".time").innerText = DateTime.fromMillis(
-    res.data.food.lastPressed
-  ).toLocaleString(DateTime.DATETIME_MED);
+  updatePanel("poop", res.data.poop);
+  updatePanel("water", res.data.water);
+  updatePanel("food", res.data.food);
 }
 
 function boot() {
