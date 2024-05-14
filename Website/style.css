@@ -43,7 +43,7 @@ body {
   align-items: center;
   justify-content: center;
   aspect-ratio: 1/1;
-  color: #555;
+  color: #ddd;
 }
 
 [data-id="poop"][data-mode="on"] .svg-container {
