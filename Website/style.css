@@ -1,0 +1,99 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 100vw;
+  height: 100vh;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Poetsen One";
+}
+
+#box {
+  display: flex;
+  gap: 40px;
+  min-height: 0;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  width: clamp(300px, 20%, 500px);
+  aspect-ratio: 6/8;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.svg-container {
+  height: 45%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1/1;
+  color: #ddd;
+}
+
+[data-id="water"] svg {
+  transform: scale(-1, 1);
+}
+
+[data-id="poop"][data-mode="on"] .svg-container {
+  color: rgb(244, 162, 118);
+}
+
+[data-id="water"][data-mode="on"] .svg-container {
+  color: rgb(148, 198, 242);
+}
+
+[data-id="food"][data-mode="on"] .svg-container {
+  color: rgb(123, 216, 130);
+}
+
+@keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(1turn);
+    transform: rotate(1turn);
+  }
+}
+
+#refresh {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+#refresh.active svg {
+  animation-name: spin;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+#refresh:hover {
+  color: darkblue;
+}
+
+#refresh svg {
+  width: 24px;
+  height: 24px;
+}
