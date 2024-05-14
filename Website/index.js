@@ -28,3 +28,5 @@ function boot() {
   setInterval(fetchData, 5000);
   fetchData().catch((err) => console.error(err));
 }
+
+boot();
