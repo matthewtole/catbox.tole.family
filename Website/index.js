@@ -20,7 +20,7 @@ function updatePanel(id, data) {
   element.querySelector(".time").innerText = DateTime.fromMillis(
     data.lastPressed
   ).toRelative();
-  if (data.lastPressed - Date.now() < panels[id].delay) {
+  if (Date.now() - data.lastPressed >= panels[id].delay) {
     element.setAttribute("data-mode", "on");
   } else {
     element.setAttribute("data-mode", "off");
