@@ -23,7 +23,7 @@ export const ID_TO_KEY = {
 export async function getData(): Promise<Data> {
   const res = await axios({
     method: "GET",
-    url: `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,
+    url: `https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,
     headers: {
       "X-Access-Key": JSONBIN_KEY,
     },
@@ -37,7 +37,7 @@ export async function updateData(data: Data): Promise<void> {
     url: `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,
     headers: {
       "X-Access-Key": JSONBIN_KEY,
-      'Content-Type': 'application/json'
+      "Content-Type": "application/json",
     },
     data,
   });
