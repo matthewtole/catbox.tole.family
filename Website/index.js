@@ -17,4 +17,7 @@ async function fetchData() {
   ).toLocaleString(DateTime.DATETIME_MED);
 }
 
-fetchData().catch((err) => console.error(err));
+function boot() {
+  setInterval(fetchData, 5000);
+  fetchData().catch((err) => console.error(err));
+}
