@@ -1,5 +1,5 @@
 async function fetchData() {
-  const res = await axios.get("/netlify/functions/data");
+  const res = await axios.get("/.netlify/functions/data");
   console.log(res.data.record);
 }
 
