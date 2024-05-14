@@ -1,5 +1,3 @@
-const { default: axios } = require("axios");
-
 document.addEventListener("load", () => {
   axios
     .get("/netlify/functions/data")
