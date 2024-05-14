@@ -28,10 +28,11 @@ void setup() {
   Serial.begin(9600);
 
   ledStatus.begin();
+  ledStatus.setBrightness(20);
   status = STATUS_BOOTING;
   updateStatusLed();
   for (uint8_t p = 0; p < NUM_PANELS; p = p + 1) {
-    setupPanel(&panels[p], 200);
+    setupPanel(&panels[p], 150);
   }
   setupWifi();
   // TODO: Get the data from the server

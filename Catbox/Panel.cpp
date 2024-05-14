@@ -4,12 +4,12 @@
 #include <TimeLib.h>
 #include <HTTPClient.h>
 
-String serverName = "http://eo66nndw5h9g95v.m.pipedream.net";
+String serverName = "https://catbox.tole.family/.netlify/functions/button";
 
 struct Panel panels[] = {
-  { .id = ID_FOOD, .pinLeds = 2, .pinButton = 4, .color = Adafruit_NeoPixel::Color(0, 100, 0), .delay = DELAY_FOOD },
-  { .id = ID_WATER, .pinLeds = 14, .pinButton = 12, .color = Adafruit_NeoPixel::Color(0, 0, 100), .delay = DELAY_WATER },
-  { .id = ID_POOP, .pinLeds = 5, .pinButton = 18, .color = Adafruit_NeoPixel::Color(100, 0, 0), .delay = DELAY_POOP },
+  { .id = ID_FOOD, .pinLeds = 2, .pinButton = 4, .color = Adafruit_NeoPixel::Color(27, 94, 32), .delay = DELAY_FOOD },
+  { .id = ID_WATER, .pinLeds = 14, .pinButton = 12, .color = Adafruit_NeoPixel::Color(79, 195, 247), .delay = DELAY_WATER },
+  { .id = ID_POOP, .pinLeds = 5, .pinButton = 18, .color = Adafruit_NeoPixel::Color(230, 81, 0), .delay = DELAY_POOP },
 };
 
 void handleEvent(AceButton *button, uint8_t eventType, uint8_t buttonState);
@@ -30,8 +30,7 @@ void setupPanel(Panel *panel, uint8_t brightness) {
   ButtonConfig *buttonConfig = panel->button->getButtonConfig();
   buttonConfig->setEventHandler(handleEvent);
   buttonConfig->setFeature(ButtonConfig::kFeatureClick);
-  buttonConfig->setFeature(ButtonConfig::kFeatureDoubleClick);
-  buttonConfig->setDoubleClickDelay(600);
+  buttonConfig->setClickDelay(600);
 }
 
 void loopPanel(Panel *panel) {
@@ -49,12 +48,10 @@ void loopPanel(Panel *panel) {
 }
 
 void handleEvent(AceButton *button, uint8_t eventType, uint8_t buttonState) {
+  Serial.printf("Button clicked: \nid = %d\n eventType = %d\n state=%d\n", button->getId(), eventType, buttonState);
   switch (eventType) {
     case AceButton::kEventClicked:
       handleClick(button->getId());
-      break;
-    case AceButton::kEventDoubleClicked:
-      handleDoubleClick(button->getId());
       break;
   }
 }
@@ -85,10 +82,16 @@ void handleClick(uint8_t id) {
   Serial.println(id);
 
   Panel *panel = getPanel(id);
+  if (panel == NULL) {
+    Serial.printf("Failed to get the panel for ID %d", id);
+    return;
+  }
   panel->mode = MODE_OFF;
-  panel->lastPress = now(); 
+  panel->lastPress = now();
+  loopPanel(panel);
 
-  httpRequest(serverName);
+  String url = serverName + "?id=" + String(id);
+  httpRequest(url);
 }
 
 void handleDoubleClick(uint8_t id) {
@@ -97,5 +100,10 @@ void handleDoubleClick(uint8_t id) {
 }
 
 Panel *getPanel(uint8_t id) {
-  return &panels[id];
+  for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
+    if (panels[p].id == id) {
+      return &panels[p];
+    }
+  }
+  return NULL;
 }

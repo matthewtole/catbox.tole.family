@@ -10,9 +10,9 @@ using namespace ace_button;
 #define DEBUG_DELAY
 
 #ifdef DEBUG_DELAY
-#define DELAY_FOOD 10
-#define DELAY_POOP 2
-#define DELAY_WATER 5
+#define DELAY_FOOD 20
+#define DELAY_POOP 20
+#define DELAY_WATER 20
 #else
 #define DELAY_FOOD 60 * 60 * 24 * 14  // 14 days
 #define DELAY_POOP 60 * 60 * 24       // 24 hours
@@ -29,8 +29,8 @@ using namespace ace_button;
 #define NUM_PANELS 3
 extern struct Panel panels[];
 
-// Each panel has an LED strip length 3
-#define LED_COUNT 3
+// Each panel has an 2 LED strips of length 3
+#define LED_COUNT 6
 
 struct Panel {
   // Panel ID
