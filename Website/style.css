@@ -46,6 +46,10 @@ body {
   color: #ddd;
 }
 
+[data-id="water"] svg {
+  transform: scale(-1, 1);
+}
+
 [data-id="poop"][data-mode="on"] .svg-container {
   color: rgb(244, 162, 118);
 }
