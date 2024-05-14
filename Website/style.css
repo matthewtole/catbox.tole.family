@@ -45,15 +45,15 @@ body {
 }
 
 [data-id="poop"][data-mode="on"] .svg-container {
-  color: rgb(230, 81, 0);
+  color: rgb(244, 162, 118);
 }
 
 [data-id="water"][data-mode="on"] .svg-container {
-  color: rgb(79, 195, 247);
+  color: rgb(148, 198, 242);
 }
 
 [data-id="food"][data-mode="on"] .svg-container {
-  color: rgb(27, 94, 32);
+  color: rgb(123, 216, 130);
 }
 
 @keyframes spin {
