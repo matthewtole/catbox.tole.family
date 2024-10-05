@@ -48,11 +48,9 @@ static const uint8_t icon_time[8] = { 0x3c, 0x42, 0x91, 0x91, 0x8d, 0x81, 0x42, 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 
-
-
-#define PIN_POOP_RING 27
-#define PIN_FOOD_RING 26
-#define PIN_WATER_RING 25
+#define PIN_POOP_RING 15
+#define PIN_FOOD_RING 2
+#define PIN_WATER_RING 4
 
 #define RING_PIXELS 8
 
@@ -60,21 +58,23 @@ Adafruit_NeoPixel ring_poop(RING_PIXELS, PIN_POOP_RING, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel ring_food(RING_PIXELS, PIN_FOOD_RING, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel ring_water(RING_PIXELS, PIN_WATER_RING, NEO_GRB + NEO_KHZ800);
 
-#define PIN_POOP_BUTTON 23
-#define PIN_POOP_INDICATOR 5
+#define PIN_POOP_BUTTON 35
+#define PIN_POOP_INDICATOR 27
 OneButton btn_poop = OneButton(PIN_POOP_BUTTON, true, true);
 static void handle_poop_click();
 bool poop_indicator = false;
 
-#define PIN_FOOD_BUTTON 23
-#define PIN_FOOD_INDICATOR 5
+#define PIN_FOOD_BUTTON 32
+#define PIN_FOOD_INDICATOR 26
 OneButton btn_food = OneButton(PIN_FOOD_BUTTON, true, true);
 static void handle_food_click();
+bool food_indicator = false;
 
-#define PIN_WATER_BUTTON 23
-#define PIN_WATER_INDICATOR 5
+#define PIN_WATER_BUTTON 33
+#define PIN_WATER_INDICATOR 25
 OneButton btn_water = OneButton(PIN_WATER_BUTTON, true, true);
 static void handle_water_click();
+bool water_indicator = false;
 
 void draw_boot_screen() {
   display.clearDisplay();
@@ -103,15 +103,15 @@ void draw_status_screen() {
   display.println(WiFi.localIP());
 
   // MIDDLE ROW
-  display.drawBitmap(2, 12, icon_poop, 8, 8, 1);
+  display.drawBitmap(2, 12, icon_food, 8, 8, 1);
   display.setCursor(12, 14);
   display.print("00000");
 
-  display.drawBitmap(44, 12, icon_water, 8, 8, 1);
+  display.drawBitmap(44, 12, icon_poop, 8, 8, 1);
   display.setCursor(54, 14);
   display.print("00000");
 
-  display.drawBitmap(86, 12, icon_food, 8, 8, 1);
+  display.drawBitmap(86, 12, icon_water, 8, 8, 1);
   display.setCursor(96, 14);
   display.print("00000");
 
@@ -139,9 +139,9 @@ void update_ring(Adafruit_NeoPixel *ring, uint32_t color) {
 }
 
 void update_rings() {
-  update_ring(&ring_poop, ring_poop.Color(255, 0, 0));
-  update_ring(&ring_food, ring_food.Color(0, 255, 0));
-  update_ring(&ring_water, ring_water.Color(0, 0, 255));
+  update_ring(&ring_poop, Adafruit_NeoPixel::Color(230, 81, 0));
+  update_ring(&ring_food, Adafruit_NeoPixel::Color(27, 94, 32));
+  update_ring(&ring_water, Adafruit_NeoPixel::Color(79, 195, 247));
 }
 
 void setup_wifi() {
@@ -192,15 +192,15 @@ void setup() {
   draw_boot_screen();
 
   ring_poop.begin();
-  ring_poop.setBrightness(100);
+  ring_poop.setBrightness(255);
   update_ring(&ring_poop, ring_poop.Color(255, 255, 255));
 
   ring_food.begin();
-  ring_food.setBrightness(100);
+  ring_food.setBrightness(255);
   update_ring(&ring_food, ring_food.Color(255, 255, 255));
 
   ring_water.begin();
-  ring_water.setBrightness(100);
+  ring_water.setBrightness(255);
   update_ring(&ring_water, ring_water.Color(255, 255, 255));
 
   setup_wifi();
@@ -228,19 +228,26 @@ void loop() {
   }
 
   btn_poop.tick();
-  digitalWrite(PIN_POOP_INDICATOR, HIGH ? poop_indicator : LOW);
+  digitalWrite(PIN_POOP_INDICATOR, poop_indicator ? HIGH : LOW);
 
   btn_food.tick();
+  digitalWrite(PIN_FOOD_INDICATOR, food_indicator ? HIGH : LOW);
 
   btn_water.tick();
+  digitalWrite(PIN_WATER_INDICATOR, water_indicator ? HIGH : LOW);
 }
 
 static void handle_poop_click() {
   poop_indicator = !poop_indicator;
+  Serial.println("Poop");
 }
 
 static void handle_food_click() {
+  food_indicator = !food_indicator;
+  Serial.println("Food");
 }
 
 static void handle_water_click() {
+  water_indicator = !water_indicator;
+  Serial.println("Water");
 }
