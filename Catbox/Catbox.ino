@@ -3,22 +3,26 @@
 #include <HTTPClient.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
-// #include <ESPAsyncWebServer.h>
-// #include <AsyncElegantOTA.h>
 #include <ESPmDNS.h>
 #include <TimeLib.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <OneButton.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 
+#include "Panel.h"
 #include "secrets.h"
+
 
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 time_t lastWifiCheck = 0;
 uint8_t wifi_status = WL_IDLE_STATUS;
-// AsyncWebServer server(80);
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 60 * 60 * -7, 60000);
 
 // Generated using this online tool
 // https://jrabausch.github.io/lcd-image/web/
@@ -54,27 +58,69 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 #define RING_PIXELS 8
 
-Adafruit_NeoPixel ring_poop(RING_PIXELS, PIN_POOP_RING, NEO_GRB + NEO_KHZ800);
+// Adafruit_NeoPixel ring_poop(RING_PIXELS, PIN_POOP_RING, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel ring_food(RING_PIXELS, PIN_FOOD_RING, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel ring_water(RING_PIXELS, PIN_WATER_RING, NEO_GRB + NEO_KHZ800);
 
-#define PIN_POOP_BUTTON 35
-#define PIN_POOP_INDICATOR 27
+#define PIN_POOP_BUTTON 25
+#define PIN_POOP_INDICATOR 26
 OneButton btn_poop = OneButton(PIN_POOP_BUTTON, true, true);
 static void handle_poop_click();
-bool poop_indicator = false;
+// bool poop_indicator = false;
+// unsigned long poop_time = 0;
+#define POOP_DURATION 1 * DAY_HOURS *HOUR_SEC
+// char poop_label[6] = "00000";
 
-#define PIN_FOOD_BUTTON 32
-#define PIN_FOOD_INDICATOR 26
+#define PIN_FOOD_BUTTON 18
+#define PIN_FOOD_INDICATOR 5
 OneButton btn_food = OneButton(PIN_FOOD_BUTTON, true, true);
 static void handle_food_click();
-bool food_indicator = false;
+// bool food_indicator = false;
+// unsigned long food_time = 0;
+#define FOOD_DURATION 14 * DAY_HOURS *HOUR_SEC
+// char food_label[6] = "00000";
 
-#define PIN_WATER_BUTTON 33
-#define PIN_WATER_INDICATOR 25
+#define PIN_WATER_BUTTON 32
+#define PIN_WATER_INDICATOR 33
 OneButton btn_water = OneButton(PIN_WATER_BUTTON, true, true);
 static void handle_water_click();
-bool water_indicator = false;
+// bool water_indicator = false;
+// unsigned long water_time = 0;
+#define WATER_DURATION 7 * DAY_HOURS *HOUR_SEC
+// char water_label[6] = "00000";
+
+Panel panel_poop = {
+  .pin_ring = PIN_POOP_RING,
+  .pin_button = PIN_POOP_BUTTON,
+  .pin_indicator = PIN_POOP_INDICATOR,
+  .last_pressed = 0,
+  .duration = POOP_DURATION,
+  .color = RED,
+  .label = "00000",
+  .icon = { 0x00, 0x00, 0x10, 0x18, 0x3c, 0x3c, 0x7e, 0x7e }
+};
+
+Panel panel_food = {
+  .pin_ring = PIN_FOOD_RING,
+  .pin_button = PIN_FOOD_BUTTON,
+  .pin_indicator = PIN_FOOD_INDICATOR,
+  .last_pressed = 0,
+  .duration = FOOD_DURATION,
+  .color = GREEN,
+  .label = "00000",
+  .icon = { 0x00, 0x6a, 0x6e, 0x64, 0x44, 0x44, 0x44, 0x44 }
+};
+
+Panel panel_water = {
+  .pin_ring = PIN_WATER_RING,
+  .pin_button = PIN_WATER_BUTTON,
+  .pin_indicator = PIN_WATER_INDICATOR,
+  .last_pressed = 0,
+  .duration = WATER_DURATION,
+  .color = BLUE,
+  .label = "00000",
+  .icon = { 0x08, 0x18, 0x3c, 0x3c, 0x7e, 0x7a, 0x3c, 0x18 }
+};
 
 void draw_boot_screen() {
   display.clearDisplay();
@@ -103,23 +149,21 @@ void draw_status_screen() {
   display.println(WiFi.localIP());
 
   // MIDDLE ROW
-  display.drawBitmap(2, 12, icon_food, 8, 8, 1);
-  display.setCursor(12, 14);
-  display.print("00000");
-
-  display.drawBitmap(44, 12, icon_poop, 8, 8, 1);
-  display.setCursor(54, 14);
-  display.print("00000");
-
-  display.drawBitmap(86, 12, icon_water, 8, 8, 1);
-  display.setCursor(96, 14);
-  display.print("00000");
+  panel_draw_status(&panel_food, &display, &timeClient, 2, 12);
+  panel_draw_status(&panel_poop, &display, &timeClient, 44, 12);
+  panel_draw_status(&panel_water, &display, &timeClient, 86, 12);
 
   // BOTTOM ROW
   display.drawBitmap(2, 24, icon_time, 8, 8, 1);
   display.setCursor(12, 24);
-  display.print("00:00:00");
+  display.print(timeClient.getFormattedTime());
 
+  display.display();
+}
+
+void draw_full_screen() {
+  display.clearDisplay();
+  display.drawRect(0, 0, 128, 32, SSD1306_WHITE);
   display.display();
 }
 
@@ -139,9 +183,9 @@ void update_ring(Adafruit_NeoPixel *ring, uint32_t color) {
 }
 
 void update_rings() {
-  update_ring(&ring_poop, Adafruit_NeoPixel::Color(230, 81, 0));
-  update_ring(&ring_food, Adafruit_NeoPixel::Color(27, 94, 32));
-  update_ring(&ring_water, Adafruit_NeoPixel::Color(79, 195, 247));
+  panel_loop(&panel_poop, &timeClient);
+  panel_loop(&panel_food, &timeClient);
+  panel_loop(&panel_water, &timeClient);
 }
 
 void setup_wifi() {
@@ -158,7 +202,6 @@ void setup_wifi() {
   Serial.print("Connected to WiFi network with IP Address: ");
   Serial.println(WiFi.localIP());
 
-
   // Register the devices name with mDNS
   if (!MDNS.begin("catbox")) {
     Serial.println("Error setting up MDNS responder!");
@@ -169,14 +212,7 @@ void setup_wifi() {
   Serial.println("mDNS responder started at catbox.local");
 
   wifi_status = WiFi.status();
-
-  // Setup the HTTP server to handle OTA updates
-  // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-  //   request->send(200, "text/plain", "CatBox v3");
-  // });
-
-  // AsyncElegantOTA.begin(&server);
-  // server.begin();
+  timeClient.begin();
 }
 
 
@@ -191,31 +227,17 @@ void setup() {
   }
   draw_boot_screen();
 
-  ring_poop.begin();
-  ring_poop.setBrightness(255);
-  update_ring(&ring_poop, ring_poop.Color(255, 255, 255));
-
-  ring_food.begin();
-  ring_food.setBrightness(255);
-  update_ring(&ring_food, ring_food.Color(255, 255, 255));
-
-  ring_water.begin();
-  ring_water.setBrightness(255);
-  update_ring(&ring_water, ring_water.Color(255, 255, 255));
+  panel_create(&panel_poop);
+  panel_create(&panel_food);
+  panel_create(&panel_water);
 
   setup_wifi();
   // TODO: Get the data from the server
 
   btn_poop.attachClick(handle_poop_click);
-  pinMode(PIN_POOP_INDICATOR, OUTPUT);
-
   btn_food.attachClick(handle_food_click);
-  pinMode(PIN_FOOD_INDICATOR, OUTPUT);
-
   btn_water.attachClick(handle_water_click);
-  pinMode(PIN_WATER_INDICATOR, OUTPUT);
 }
-
 
 void loop() {
   static uint16_t prev = millis();
@@ -223,31 +245,26 @@ void loop() {
   if ((uint16_t)(_now - prev) >= 5) {
     check_wifi();
     draw_status_screen();
-    update_rings();
     prev = _now;
   }
+  
+  update_rings();
 
   btn_poop.tick();
-  digitalWrite(PIN_POOP_INDICATOR, poop_indicator ? HIGH : LOW);
-
   btn_food.tick();
-  digitalWrite(PIN_FOOD_INDICATOR, food_indicator ? HIGH : LOW);
-
   btn_water.tick();
-  digitalWrite(PIN_WATER_INDICATOR, water_indicator ? HIGH : LOW);
+
+  timeClient.update();
 }
 
 static void handle_poop_click() {
-  poop_indicator = !poop_indicator;
-  Serial.println("Poop");
+  panel_button_press(&panel_poop, &timeClient);
 }
 
 static void handle_food_click() {
-  food_indicator = !food_indicator;
-  Serial.println("Food");
+  panel_button_press(&panel_food, &timeClient);
 }
 
 static void handle_water_click() {
-  water_indicator = !water_indicator;
-  Serial.println("Water");
+  panel_button_press(&panel_water, &timeClient);
 }
