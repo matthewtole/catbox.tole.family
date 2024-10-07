@@ -20,7 +20,7 @@ const panels = {
 function updatePanel(id, data) {
   const element = panels[id].element;
   element.querySelector(".time").innerText = DateTime.now().minus({seconds: data.lastPressed}).toRelative();
-  if (Date.now() + data.lastPressed >= panels[id].delay) {
+  if (data.lastPressed >= panels[id].delay) {
     element.setAttribute("data-mode", "on");
   } else {
     element.setAttribute("data-mode", "off");
