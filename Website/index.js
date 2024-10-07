@@ -5,15 +5,15 @@ const refresh = document.getElementById("refresh");
 const panels = {
   poop: {
     element: document.querySelector(".panel[data-id='poop']"),
-    delay: 24 * 60 * 60 * 1000,
+    delay: 24 * 60 * 60,
   },
   water: {
     element: document.querySelector(".panel[data-id='water']"),
-    delay: 7 * 24 * 60 * 60 * 1000,
+    delay: 7 * 24 * 60 * 60,
   },
   food: {
     element: document.querySelector(".panel[data-id='food']"),
-    delay: 14 * 24 * 60 * 60 * 1000,
+    delay: 14 * 24 * 60 * 60,
   },
 };
 
