@@ -5,24 +5,22 @@ const refresh = document.getElementById("refresh");
 const panels = {
   poop: {
     element: document.querySelector(".panel[data-id='poop']"),
-    delay: 20000,
+    delay: 24 * 60 * 60,
   },
   water: {
     element: document.querySelector(".panel[data-id='water']"),
-    delay: 20000,
+    delay: 7 * 24 * 60 * 60,
   },
   food: {
     element: document.querySelector(".panel[data-id='food']"),
-    delay: 20000,
+    delay: 14 * 24 * 60 * 60,
   },
 };
 
 function updatePanel(id, data) {
   const element = panels[id].element;
-  element.querySelector(".time").innerText = DateTime.fromMillis(
-    data.lastPressed
-  ).toRelative();
-  if (Date.now() - data.lastPressed >= panels[id].delay) {
+  element.querySelector(".time").innerText = DateTime.now().minus({seconds: data.lastPressed}).toRelative();
+  if (data.lastPressed >= panels[id].delay) {
     element.setAttribute("data-mode", "on");
   } else {
     element.setAttribute("data-mode", "off");
