@@ -11,10 +11,11 @@
 #include <OneButton.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
+#include <Thread.h>
+#include <Arduino_JSON.h>
 
 #include "Panel.h"
 #include "secrets.h"
-
 
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
@@ -39,9 +40,6 @@ static const uint8_t logo[72] = {
   0xc5, 0xf0, 0x04, 0x00, 0x20, 0x00, 0x00, 0x00
 };
 
-static const uint8_t icon_poop[8] = { 0x00, 0x00, 0x10, 0x18, 0x3c, 0x3c, 0x7e, 0x7e };
-static const uint8_t icon_food[8] = { 0x00, 0x6a, 0x6e, 0x64, 0x44, 0x44, 0x44, 0x44 };
-static const uint8_t icon_water[8] = { 0x08, 0x18, 0x3c, 0x3c, 0x7e, 0x7a, 0x3c, 0x18 };
 static const uint8_t icon_online[8] = { 0x00, 0x3c, 0x42, 0x99, 0x24, 0x42, 0x18, 0x00 };
 static const uint8_t icon_offline[8] = { 0x00, 0x18, 0x18, 0x18, 0x18, 0x00, 0x18, 0x00 };
 static const uint8_t icon_time[8] = { 0x3c, 0x42, 0x91, 0x91, 0x8d, 0x81, 0x42, 0x3c };
@@ -51,76 +49,119 @@ static const uint8_t icon_time[8] = { 0x3c, 0x42, 0x91, 0x91, 0x8d, 0x81, 0x42, 
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
-
 #define PIN_POOP_RING 15
+#define PIN_POOP_BUTTON 25
+#define PIN_POOP_INDICATOR 26
+
 #define PIN_FOOD_RING 2
+#define PIN_FOOD_BUTTON 18
+#define PIN_FOOD_INDICATOR 5
+
 #define PIN_WATER_RING 4
+#define PIN_WATER_BUTTON 32
+#define PIN_WATER_INDICATOR 33
 
 #define RING_PIXELS 8
 
-// Adafruit_NeoPixel ring_poop(RING_PIXELS, PIN_POOP_RING, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel ring_food(RING_PIXELS, PIN_FOOD_RING, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel ring_water(RING_PIXELS, PIN_WATER_RING, NEO_GRB + NEO_KHZ800);
-
-#define PIN_POOP_BUTTON 25
-#define PIN_POOP_INDICATOR 26
 OneButton btn_poop = OneButton(PIN_POOP_BUTTON, true, true);
-static void handle_poop_click();
-// bool poop_indicator = false;
-// unsigned long poop_time = 0;
-#define POOP_DURATION 1 * DAY_HOURS *HOUR_SEC
-// char poop_label[6] = "00000";
-
-#define PIN_FOOD_BUTTON 18
-#define PIN_FOOD_INDICATOR 5
 OneButton btn_food = OneButton(PIN_FOOD_BUTTON, true, true);
-static void handle_food_click();
-// bool food_indicator = false;
-// unsigned long food_time = 0;
-#define FOOD_DURATION 14 * DAY_HOURS *HOUR_SEC
-// char food_label[6] = "00000";
-
-#define PIN_WATER_BUTTON 32
-#define PIN_WATER_INDICATOR 33
 OneButton btn_water = OneButton(PIN_WATER_BUTTON, true, true);
+
+static void handle_poop_click();
+static void handle_poop_double_click();
+static void handle_food_click();
 static void handle_water_click();
-// bool water_indicator = false;
-// unsigned long water_time = 0;
-#define WATER_DURATION 7 * DAY_HOURS *HOUR_SEC
-// char water_label[6] = "00000";
+void draw_boot_screen();
+void draw_status_screen();
+void check_wifi();
+void setup_wifi();
+void fetch_data();
 
 Panel panel_poop = {
+  .id = "poop",
   .pin_ring = PIN_POOP_RING,
   .pin_button = PIN_POOP_BUTTON,
   .pin_indicator = PIN_POOP_INDICATOR,
-  .last_pressed = 0,
-  .duration = POOP_DURATION,
-  .color = RED,
-  .label = "00000",
+  .duration = 1 * DAY_HOURS * HOUR_SEC,
+  .color = 0xff6600,
   .icon = { 0x00, 0x00, 0x10, 0x18, 0x3c, 0x3c, 0x7e, 0x7e }
 };
 
 Panel panel_food = {
+  .id = "food",
   .pin_ring = PIN_FOOD_RING,
   .pin_button = PIN_FOOD_BUTTON,
   .pin_indicator = PIN_FOOD_INDICATOR,
-  .last_pressed = 0,
-  .duration = FOOD_DURATION,
-  .color = GREEN,
-  .label = "00000",
+  .duration = 14 * DAY_HOURS * HOUR_SEC,
+  .color = 0x339900,
   .icon = { 0x00, 0x6a, 0x6e, 0x64, 0x44, 0x44, 0x44, 0x44 }
 };
 
 Panel panel_water = {
+  .id = "water",
   .pin_ring = PIN_WATER_RING,
   .pin_button = PIN_WATER_BUTTON,
   .pin_indicator = PIN_WATER_INDICATOR,
-  .last_pressed = 0,
-  .duration = WATER_DURATION,
-  .color = BLUE,
-  .label = "00000",
+  .duration = 7 * DAY_HOURS * HOUR_SEC,
+  .color = 0x33CCFF,
   .icon = { 0x08, 0x18, 0x3c, 0x3c, 0x7e, 0x7a, 0x3c, 0x18 }
 };
+
+Thread post_thread = Thread();
+void post_thread_callback();
+
+void setup() {
+  Serial.begin(9600);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;)
+      ;
+  }
+  draw_boot_screen();
+
+  panel_setup(&panel_poop, &timeClient);
+  panel_setup(&panel_food, &timeClient);
+  panel_setup(&panel_water, &timeClient);
+
+  setup_wifi();
+  timeClient.update();
+  fetch_data();
+  // TODO: Get the data from the server
+
+  btn_poop.attachClick(handle_poop_click);
+  btn_poop.attachDoubleClick(handle_poop_double_click);
+  btn_food.attachClick(handle_food_click);
+  btn_water.attachClick(handle_water_click);
+
+  post_thread.enabled = true;
+  post_thread.setInterval(200);
+  post_thread.onRun(post_thread_callback);
+}
+
+void loop() {
+  static uint16_t prev = millis();
+  uint16_t _now = millis();
+  if ((uint16_t)(_now - prev) >= 5) {
+    check_wifi();
+    draw_status_screen();
+    prev = _now;
+  }
+
+  panel_loop(&panel_poop);
+  panel_loop(&panel_food);
+  panel_loop(&panel_water);
+
+  btn_poop.tick();
+  btn_food.tick();
+  btn_water.tick();
+
+  timeClient.update();
+
+  if (post_thread.shouldRun()) {
+    post_thread.run();
+  }
+}
 
 void draw_boot_screen() {
   display.clearDisplay();
@@ -149,9 +190,9 @@ void draw_status_screen() {
   display.println(WiFi.localIP());
 
   // MIDDLE ROW
-  panel_draw_status(&panel_food, &display, &timeClient, 2, 12);
-  panel_draw_status(&panel_poop, &display, &timeClient, 44, 12);
-  panel_draw_status(&panel_water, &display, &timeClient, 86, 12);
+  panel_draw_status(&panel_food, &display, 2, 12);
+  panel_draw_status(&panel_poop, &display, 44, 12);
+  panel_draw_status(&panel_water, &display, 86, 12);
 
   // BOTTOM ROW
   display.drawBitmap(2, 24, icon_time, 8, 8, 1);
@@ -161,31 +202,11 @@ void draw_status_screen() {
   display.display();
 }
 
-void draw_full_screen() {
-  display.clearDisplay();
-  display.drawRect(0, 0, 128, 32, SSD1306_WHITE);
-  display.display();
-}
-
-
 void check_wifi() {
   if (now() >= lastWifiCheck + 60) {
     lastWifiCheck = now();
     wifi_status = WiFi.status();
   }
-}
-
-void update_ring(Adafruit_NeoPixel *ring, uint32_t color) {
-  for (int i = 0; i < RING_PIXELS; i++) {
-    ring->setPixelColor(i, color);
-  }
-  ring->show();
-}
-
-void update_rings() {
-  panel_loop(&panel_poop, &timeClient);
-  panel_loop(&panel_food, &timeClient);
-  panel_loop(&panel_water, &timeClient);
 }
 
 void setup_wifi() {
@@ -215,56 +236,40 @@ void setup_wifi() {
   timeClient.begin();
 }
 
-
-
-void setup() {
-  Serial.begin(9600);
-
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println(F("SSD1306 allocation failed"));
-    for (;;)
-      ;
-  }
-  draw_boot_screen();
-
-  panel_create(&panel_poop);
-  panel_create(&panel_food);
-  panel_create(&panel_water);
-
-  setup_wifi();
-  // TODO: Get the data from the server
-
-  btn_poop.attachClick(handle_poop_click);
-  btn_food.attachClick(handle_food_click);
-  btn_water.attachClick(handle_water_click);
-}
-
-void loop() {
-  static uint16_t prev = millis();
-  uint16_t _now = millis();
-  if ((uint16_t)(_now - prev) >= 5) {
-    check_wifi();
-    draw_status_screen();
-    prev = _now;
-  }
-  
-  update_rings();
-
-  btn_poop.tick();
-  btn_food.tick();
-  btn_water.tick();
-
-  timeClient.update();
-}
-
 static void handle_poop_click() {
-  panel_button_press(&panel_poop, &timeClient);
+  panel_button_press(&panel_poop);
+}
+
+static void handle_poop_double_click() {
 }
 
 static void handle_food_click() {
-  panel_button_press(&panel_food, &timeClient);
+  panel_button_press(&panel_food);
 }
 
 static void handle_water_click() {
-  panel_button_press(&panel_water, &timeClient);
+  panel_button_press(&panel_water);
+}
+
+void post_thread_callback() {
+  // panel_post_data(&panel_poop);
+  // panel_post_data(&panel_food);
+  // panel_post_data(&panel_water);
+}
+
+void fetch_data() {
+  HTTPClient http;
+  String url = String(String(SERVER_ROOT) + "/data");
+  http.begin(url.c_str());
+  http.GET();
+  String payload = http.getString();
+  http.end();
+  JSONVar data = JSON.parse(payload);
+
+  panel_poop.last_pressed = timeClient.getEpochTime() - int(data["poop"]["lastPressed"]);
+  panel_food.last_pressed = timeClient.getEpochTime() - int(data["food"]["lastPressed"]);
+  panel_water.last_pressed = timeClient.getEpochTime() - int(data["water"]["lastPressed"]);
+  panel_update_light(&panel_poop);
+  panel_update_light(&panel_food);
+  panel_update_light(&panel_water);
 }
