@@ -21,17 +21,24 @@ export const ID_TO_KEY = {
 };
 
 export async function getData(): Promise<Data> {
-  const res = await axios({
-    method: "GET",
-    url: `https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,
-    headers: {
-      "X-Access-Key": JSONBIN_KEY,
+  return {
+    "water": {
+      "lastPressed": 0,
+      "history": []
     },
-  });
-  return res.data.record as Data;
+    "food": {
+      "lastPressed": 0,
+      "history": []
+    },
+    "poop": {
+      "lastPressed": 0,
+      "history": []
+    }
+  }
 }
 
 export async function updateData(data: Data): Promise<void> {
+  return;
   await axios({
     method: "PUT",
     url: `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`,
