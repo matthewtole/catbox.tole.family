@@ -18,18 +18,18 @@ body {
   display: flex;
   gap: 40px;
   min-height: 0;
-  flex: 1;
   align-items: center;
   justify-content: center;
-}
-
-.panel {
-  width: clamp(300px, 20%, 500px);
-  aspect-ratio: 6/8;
   border: 1px solid #ddd;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
   background: #fff;
+  width: clamp(300px, 70%, 800px);
+}
+
+.panel {
+  width: clamp(300px, 20%, 500px);
+  aspect-ratio: 6 / 8;
   display: flex;
   flex-direction: column;
   align-items: center;
