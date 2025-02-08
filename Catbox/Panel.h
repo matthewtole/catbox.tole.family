@@ -10,8 +10,6 @@
 #define DAY_HOURS 24
 #define RING_UPDATE_INTERVAL 60
 
-#define SERVER_ROOT "https://catbox.tole.family/.netlify/functions"
-
 struct Panel {
   char id[6];
   WS2812FX *ring;

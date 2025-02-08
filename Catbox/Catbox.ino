@@ -132,10 +132,10 @@ void setup() {
   Serial.begin(115200);
   logger.registerSerial(MYLOG, DEBUG, "tst");
 
-  esp_core_dump_init();
-  esp_core_dump_config_t config;
-  config.core_dump_type = ESP_CORE_DUMP_FLASH;
-  esp_core_dump_init(&config);
+  // esp_core_dump_init();
+  // esp_core_dump_config_t config;
+  // config.core_dump_type = ESP_CORE_DUMP_FLASH;
+  // esp_core_dump_init(&config);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     logger.log(MYLOG, ERROR, "SSD1306 allocation failed");
@@ -150,7 +150,7 @@ void setup() {
 
   setup_wifi();
   timeClient.update();
-  // fetch_data();
+  fetch_data();
 
   panel_poop.button->attachClick(handle_poop_click);
   // btn_poop.attachDoubleClick(handle_poop_double_click);
@@ -212,7 +212,7 @@ void send_data(Panel *panel) {
   HTTPClient http;
   http.setTimeout(10000);  // 10 second timeout
   
-  String url = String(String(SERVER_ROOT) + "/button?id=" + String(panel->id));
+  String url = String(String(SERVER_ROOT) + "/update?id=" + String(panel->id));
   logger.log(MYLOG, DEBUG, "send_data_task: %s", url.c_str());
   
   bool success = false;
@@ -345,7 +345,7 @@ static void handle_water_double_click() {
 
 void fetch_data() {
   HTTPClient http;
-  String url = String(String(SERVER_ROOT) + "/data");
+  String url = String(String(SERVER_ROOT) + "/status");
   http.begin(url.c_str());
   http.GET();
   String payload = http.getString();
@@ -353,7 +353,7 @@ void fetch_data() {
   JSONVar data = JSON.parse(payload);
 
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
-    panels[p]->last_pressed = timeClient.getEpochTime() - int(data[panels[p]->id]["lastPressed"]);
+    panels[p]->last_pressed = timeClient.getEpochTime() - int(data[panels[p]->id]);
     panel_update_light(panels[p]);
   }
 }
