@@ -18,7 +18,6 @@ struct Panel {
   uint8_t pin_indicator;
   unsigned long last_pressed;
   unsigned long duration;
-  unsigned long snooze_duration;
   uint32_t color;
   char label[6];
   uint8_t icon[8];
@@ -35,6 +34,5 @@ void panel_loop(Panel *panel);
 void panel_draw_status(Panel *panel, Adafruit_SSD1306 *display, uint8_t x, uint8_t y);
 void panel_post_data(Panel *panel);
 void panel_update_light(Panel *panel);
-void panel_snooze(Panel *panel);
 
 #endif  // PANEL_H

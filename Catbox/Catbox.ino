@@ -93,8 +93,7 @@ Panel panel_poop = {
   .pin_ring = PIN_POOP_RING,
   .pin_button = PIN_POOP_BUTTON,
   .pin_indicator = PIN_POOP_INDICATOR,
-  .duration = 1 * DAY_HOURS * HOUR_SEC,
-  .snooze_duration = 12 * HOUR_SEC,
+  .duration = 8 * HOUR_SEC,
   .color = 0xff6600,
   .icon = { 0x00, 0x00, 0x10, 0x18, 0x3c, 0x3c, 0x7e, 0x7e },
   .x_offset = 44,
@@ -107,7 +106,6 @@ Panel panel_food = {
   .pin_button = PIN_FOOD_BUTTON,
   .pin_indicator = PIN_FOOD_INDICATOR,
   .duration = 14 * DAY_HOURS * HOUR_SEC,
-  .snooze_duration = 4 * DAY_HOURS * HOUR_SEC,
   .color = 0x339900,
   .icon = { 0x00, 0x6a, 0x6e, 0x64, 0x44, 0x44, 0x44, 0x44 },
   .x_offset = 2,
@@ -119,7 +117,6 @@ Panel panel_water = {
   .pin_button = PIN_WATER_BUTTON,
   .pin_indicator = PIN_WATER_INDICATOR,
   .duration = 7 * DAY_HOURS * HOUR_SEC,
-  .snooze_duration = 2 * DAY_HOURS * HOUR_SEC,
   .color = 0x33CCFF,
   .icon = { 0x08, 0x18, 0x3c, 0x3c, 0x7e, 0x7a, 0x3c, 0x18 },
   .x_offset = 86,
@@ -322,26 +319,13 @@ static void handle_poop_click() {
   panel_button_press(&panel_poop);
 }
 
-static void handle_poop_double_click() {
-  panel_snooze(&panel_poop);
-}
-
 static void handle_food_click() {
   panel_button_press(&panel_food);
-}
-
-static void handle_food_double_click() {
-  panel_snooze(&panel_food);
 }
 
 static void handle_water_click() {
   panel_button_press(&panel_water);
 }
-
-static void handle_water_double_click() {
-  panel_snooze(&panel_water);
-}
-
 
 void fetch_data() {
   HTTPClient http;
