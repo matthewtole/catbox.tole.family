@@ -12,11 +12,6 @@
 #include <WiFiUdp.h>
 #include <Thread.h>
 #include <Arduino_JSON.h>
-#include <Elog.h>
-
-#include "esp_system.h"
-#include "esp_spi_flash.h"
-#include "esp_core_dump.h"
 
 #include "Panel.h"
 #include "secrets.h"
@@ -97,7 +92,6 @@ Panel panel_poop = {
   .color = 0xff6600,
   .icon = { 0x00, 0x00, 0x10, 0x18, 0x3c, 0x3c, 0x7e, 0x7e },
   .x_offset = 44,
-
 };
 
 Panel panel_food = {
@@ -127,18 +121,7 @@ Panel *panels[NUM_PANELS] = { &panel_poop, &panel_food, &panel_water };
 
 void setup() {
   Serial.begin(115200);
-  logger.registerSerial(MYLOG, DEBUG, "tst");
 
-  // esp_core_dump_init();
-  // esp_core_dump_config_t config;
-  // config.core_dump_type = ESP_CORE_DUMP_FLASH;
-  // esp_core_dump_init(&config);
-
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    logger.log(MYLOG, ERROR, "SSD1306 allocation failed");
-    for (;;)
-      ;
-  }
   draw_boot_screen();
 
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
@@ -150,11 +133,8 @@ void setup() {
   fetch_data();
 
   panel_poop.button->attachClick(handle_poop_click);
-  // btn_poop.attachDoubleClick(handle_poop_double_click);
   panel_food.button->attachClick(handle_food_click);
-  // btn_food.attachDoubleClick(handle_food_double_click);
   panel_water.button->attachClick(handle_water_click);
-  // btn_water.attachDoubleClick(handle_water_double_click);
 
   BaseType_t taskCreated = xTaskCreate(
     background_task,
@@ -164,10 +144,6 @@ void setup() {
     2,
     NULL
   );
-  
-  if (taskCreated != pdPASS) {
-    logger.log(MYLOG, ERROR, "Failed to create background task");
-  }
 }
 
 void loop() {
@@ -191,7 +167,6 @@ void background_task(void *parameter) {
   while (true) {
     for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
       if (panels[p]->pending_http) {
-        logger.log(MYLOG, DEBUG, "%s has a pending HTTP request", panels[p]->id);
         send_data(panels[p]);
         break;
       }
@@ -202,7 +177,6 @@ void background_task(void *parameter) {
 
 void send_data(Panel *panel) {
   if (WiFi.status() != WL_CONNECTED) {
-    logger.log(MYLOG, ERROR, "Not connected");
     return;
   }
   
@@ -210,7 +184,6 @@ void send_data(Panel *panel) {
   http.setTimeout(10000);  // 10 second timeout
   
   String url = String(String(SERVER_ROOT) + "/update?id=" + String(panel->id));
-  logger.log(MYLOG, DEBUG, "send_data_task: %s", url.c_str());
   
   bool success = false;
   for (int retry = 0; retry < 3 && !success; retry++) {
@@ -219,14 +192,11 @@ void send_data(Panel *panel) {
     
     if (response_code > 0) {
       String response = http.getString();
-      logger.log(MYLOG, DEBUG, response.c_str());
       digitalWrite(panel->pin_indicator, HIGH);
       panel->pending_http = false;
       http_delay = DEFAULT_HTTP_DELAY;
       success = true;
     } else {
-      logger.log(MYLOG, ERROR, "HTTP failed, retry %d: %s", 
-                retry, http.errorToString(response_code).c_str());
       http_delay = min(http_delay_max, (uint32_t)(http_delay * http_delay_backoff));
       delay(100);  // Short delay between retries
     }
@@ -275,12 +245,11 @@ void draw_status_screen() {
 }
 
 void check_wifi() {
-  if (now() >= lastWifiCheck + 60) {
-    lastWifiCheck = now();
+  if (timeClient.getEpochTime() >= lastWifiCheck + 60) {
+    lastWifiCheck = timeClient.getEpochTime();
     wifi_status = WiFi.status();
     
     if (wifi_status != WL_CONNECTED) {
-      logger.log(MYLOG, ERROR, "WiFi disconnected, attempting reconnect");
       WiFi.disconnect();
       delay(1000);
       WiFi.begin(ssid, password);
