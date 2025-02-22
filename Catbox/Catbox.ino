@@ -29,7 +29,7 @@ float http_delay_backoff = 1.5;
 uint32_t http_delay_max = 5 * 60 * 1000;
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", 60 * 60 * -7, 60000);
+NTPClient* timeClient;
 
 // Generated using this online tool
 // https://jrabausch.github.io/lcd-image/web/
@@ -53,7 +53,7 @@ static const uint8_t icon_time[8] = { 0x3c, 0x42, 0x91, 0x91, 0x8d, 0x81, 0x42, 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+Adafruit_SSD1306* display;
 
 #define PIN_POOP_RING 15
 #define PIN_POOP_BUTTON 25
@@ -122,14 +122,17 @@ Panel *panels[NUM_PANELS] = { &panel_poop, &panel_food, &panel_water };
 void setup() {
   Serial.begin(115200);
 
+  display = new Adafruit_SSD1306(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+  timeClient = new NTPClient(ntpUDP, "pool.ntp.org", 60 * 60 * -7, 60000);
+
   draw_boot_screen();
 
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
-    panel_setup(panels[p], &timeClient);
+    panel_setup(panels[p], timeClient);
   }
 
   setup_wifi();
-  timeClient.update();
+  timeClient->update();
   fetch_data();
 
   panel_poop.button->attachClick(handle_poop_click);
@@ -160,7 +163,7 @@ void loop() {
     panels[p]->button->tick();
   }
 
-  timeClient.update();
+  timeClient->update();
 }
 
 void background_task(void *parameter) {
@@ -206,47 +209,47 @@ void send_data(Panel *panel) {
 
 
 void draw_boot_screen() {
-  display.clearDisplay();
+  display->clearDisplay();
 
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display->setTextSize(1);
+  display->setTextColor(SSD1306_WHITE);
 
-  display.drawBitmap(4, 4, logo, 24, 24, 1);
+  display->drawBitmap(4, 4, logo, 24, 24, 1);
 
-  display.setCursor(36, 12);
-  display.println(F("CATBOX v3.0.1"));
+  display->setCursor(36, 12);
+  display->println(F("CATBOX v3.0.1"));
 
-  display.display();
+  display->display();
 }
 
 void draw_status_screen() {
-  display.clearDisplay();
+  display->clearDisplay();
 
   // Setup the display
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
+  display->setTextSize(1);
+  display->setTextColor(SSD1306_WHITE);
 
   // TOP ROW
-  display.drawBitmap(2, 2, icon_online, 8, 8, 1);
-  display.setCursor(12, 2);
-  display.println(WiFi.localIP());
+  display->drawBitmap(2, 2, icon_online, 8, 8, 1);
+  display->setCursor(12, 2);
+  display->println(WiFi.localIP());
 
   // MIDDLE ROW
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
-    panel_draw_status(panels[p], &display, panels[p]->x_offset, 12);
+    panel_draw_status(panels[p], display, panels[p]->x_offset, 12);
   }
 
   // BOTTOM ROW
-  display.drawBitmap(2, 24, icon_time, 8, 8, 1);
-  display.setCursor(12, 24);
-  display.print(timeClient.getFormattedTime());
+  display->drawBitmap(2, 24, icon_time, 8, 8, 1);
+  display->setCursor(12, 24);
+  display->print(timeClient->getFormattedTime());
 
-  display.display();
+  display->display();
 }
 
 void check_wifi() {
-  if (timeClient.getEpochTime() >= lastWifiCheck + 60) {
-    lastWifiCheck = timeClient.getEpochTime();
+  if (timeClient->getEpochTime() >= lastWifiCheck + 60) {
+    lastWifiCheck = timeClient->getEpochTime();
     wifi_status = WiFi.status();
     
     if (wifi_status != WL_CONNECTED) {
@@ -258,30 +261,21 @@ void check_wifi() {
 }
 
 void setup_wifi() {
-  // Connect to the WiFi network
   WiFi.begin(ssid, password);
   WiFi.mode(WIFI_STA);
-  Serial.print("Connecting...");
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
     delay(500);
   }
 
-  Serial.println();
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
-
   // Register the devices name with mDNS
   if (!MDNS.begin("catbox")) {
-    Serial.println("Error setting up MDNS responder!");
     while (1) {
       delay(1000);
     }
   }
-  Serial.println("mDNS responder started at catbox.local");
 
   wifi_status = WiFi.status();
-  timeClient.begin();
+  timeClient->begin();
 }
 
 static void handle_poop_click() {
@@ -306,7 +300,7 @@ void fetch_data() {
   JSONVar data = JSON.parse(payload);
 
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
-    panels[p]->last_pressed = timeClient.getEpochTime() - int(data[panels[p]->id]);
+    panels[p]->last_pressed = timeClient->getEpochTime() - int(data[panels[p]->id]);
     panel_update_light(panels[p]);
   }
 }
