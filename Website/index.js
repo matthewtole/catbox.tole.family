@@ -5,7 +5,7 @@ const refresh = document.getElementById("refresh");
 const panels = {
   poop: {
     element: document.querySelector(".panel[data-id='poop']"),
-    delay: 24 * 60 * 60,
+    delay: 8 * 60 * 60,
   },
   water: {
     element: document.querySelector(".panel[data-id='water']"),
@@ -19,7 +19,7 @@ const panels = {
 
 function updatePanel(id, data) {
   const element = panels[id].element;
-  element.querySelector(".time").innerText = DateTime.now().minus({seconds: data.lastPressed}).toRelative();
+  element.querySelector(".time").innerText = DateTime.now().minus({seconds: data}).toRelative();
   if (data.lastPressed >= panels[id].delay) {
     element.setAttribute("data-mode", "on");
   } else {
@@ -32,7 +32,7 @@ async function fetchData() {
     return;
   }
   refresh.classList.add("active");
-  const res = await axios.get("/.netlify/functions/data");
+  const res = await axios.get("https://matthewtole--5aad334ee66c11ef8859e6cdfca9ef9f.web.val.run/status");
   updatePanel("poop", res.data.poop);
   updatePanel("water", res.data.water);
   updatePanel("food", res.data.food);
