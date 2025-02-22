@@ -5,7 +5,7 @@ const refresh = document.getElementById("refresh");
 const panels = {
   poop: {
     element: document.querySelector(".panel[data-id='poop']"),
-    delay: 24 * 60 * 60,
+    delay: 8 * 60 * 60,
   },
   water: {
     element: document.querySelector(".panel[data-id='water']"),
