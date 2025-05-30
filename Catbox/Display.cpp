@@ -1,6 +1,6 @@
 #include <Elog.h>
 
-#include "PicoPixel.h"
+#include "./fonts/PicoPixel.h"
 
 #include "Display.h"
 #include "wifi-manager.h"
