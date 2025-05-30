@@ -1,7 +1,5 @@
 #include "catbox_network.h"
 
-#include <Elog.h>
-
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 time_t lastWifiCheck = 0;

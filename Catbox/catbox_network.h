@@ -10,11 +10,6 @@
 #include <WiFi.h>
 #include <Wire.h>
 
-// ESP32 specific includes
-#include "esp_core_dump.h"
-#include "esp_spi_flash.h"
-#include "esp_system.h"
-
 // Local includes last
 #include "Panel.h"
 #include "constants.h"
