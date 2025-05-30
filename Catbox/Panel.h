@@ -22,11 +22,9 @@ struct Panel {
   unsigned long duration;
   uint32_t color;
   char label[6];
-  uint8_t icon[8];
   tm *timeinfo;
   unsigned long ring_next_update;
   bool pending_http;
-  uint8_t x_offset;
   OneButton *button;
 };
 

@@ -1,5 +1,7 @@
 #include "Arduino.h"
 
+#include "catbox_network.h"
+
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Arduino_JSON.h>
@@ -17,19 +19,7 @@
 
 #include "Display.h"
 #include "Panel.h"
-#include "secrets.h"
-
-#define MYLOG 0
-
-#define DEFAULT_HTTP_DELAY 500
-
-const char *ssid = WIFI_SSID;
-const char *password = WIFI_PASSWORD;
-time_t lastWifiCheck = 0;
-uint8_t wifi_status = WL_IDLE_STATUS;
-uint32_t http_delay = DEFAULT_HTTP_DELAY;
-float http_delay_backoff = 1.5;
-uint32_t http_delay_max = 5 * 60 * 1000;
+#include "constants.h"
 
 // Generated using this online tool
 // https://jrabausch.github.io/lcd-image/web/
@@ -41,13 +31,6 @@ static const uint8_t logo[72] = {
     0x79, 0xff, 0x9e, 0x11, 0xff, 0xc8, 0x03, 0xff, 0xc0, 0x07, 0xff, 0xe0,
     0x0f, 0xff, 0xf0, 0x0f, 0xff, 0xf0, 0x1f, 0xff, 0xf8, 0x1f, 0xff, 0xf8,
     0x1f, 0xff, 0xf8, 0x1f, 0xc5, 0xf0, 0x04, 0x00, 0x20, 0x00, 0x00, 0x00};
-
-static const uint8_t icon_online[8] = {0x00, 0x3c, 0x42, 0x99,
-                                       0x24, 0x42, 0x18, 0x00};
-static const uint8_t icon_offline[8] = {0x00, 0x18, 0x18, 0x18,
-                                        0x18, 0x00, 0x18, 0x00};
-static const uint8_t icon_time[8] = {0x3c, 0x42, 0x91, 0x91,
-                                     0x8d, 0x81, 0x42, 0x3c};
 
 #define PIN_POOP_RING 15
 #define PIN_POOP_BUTTON 25
@@ -71,10 +54,6 @@ static void handle_water_click();
 static void handle_water_double_click();
 void draw_boot_screen();
 void draw_status_screen();
-void check_wifi();
-void setup_wifi();
-void fetch_data();
-void send_data(Panel *panel);
 
 struct tm timeinfo;
 const char *ntpServer = "pool.ntp.org";
@@ -88,9 +67,6 @@ Panel panel_poop = {
     .pin_indicator = PIN_POOP_INDICATOR,
     .duration = 8 * HOUR_SEC,
     .color = 0xff6600,
-    .icon = {0x00, 0x00, 0x10, 0x18, 0x3c, 0x3c, 0x7e, 0x7e},
-    .x_offset = 44,
-
 };
 
 Panel panel_food = {
@@ -100,8 +76,6 @@ Panel panel_food = {
     .pin_indicator = PIN_FOOD_INDICATOR,
     .duration = 14 * DAY_HOURS * HOUR_SEC,
     .color = 0x339900,
-    .icon = {0x00, 0x6a, 0x6e, 0x64, 0x44, 0x44, 0x44, 0x44},
-    .x_offset = 2,
 };
 
 Panel panel_water = {
@@ -111,8 +85,6 @@ Panel panel_water = {
     .pin_indicator = PIN_WATER_INDICATOR,
     .duration = 7 * DAY_HOURS * HOUR_SEC,
     .color = 0x33CCFF,
-    .icon = {0x08, 0x18, 0x3c, 0x3c, 0x7e, 0x7a, 0x3c, 0x18},
-    .x_offset = 86,
 };
 
 #define NUM_PANELS 3
@@ -132,7 +104,7 @@ void setup() {
 
   setup_wifi();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  fetch_data();
+  fetch_data(panels, &timeinfo);
 
   panel_poop.button->attachClick(handle_poop_click);
   panel_food.button->attachClick(handle_food_click);
@@ -179,98 +151,8 @@ void background_task(void *parameter) {
   }
 }
 
-void send_data(Panel *panel) {
-  if (WiFi.status() != WL_CONNECTED) {
-    logger.log(MYLOG, ERROR, "Not connected");
-    return;
-  }
-
-  HTTPClient http;
-  http.setTimeout(10000); // 10 second timeout
-
-  String url = String(String(SERVER_ROOT) + "/update?id=" + String(panel->id));
-  logger.log(MYLOG, DEBUG, "send_data_task: %s", url.c_str());
-
-  bool success = false;
-  for (int retry = 0; retry < 3 && !success; retry++) {
-    http.begin(url.c_str());
-    int response_code = http.GET();
-
-    if (response_code > 0) {
-      String response = http.getString();
-      logger.log(MYLOG, DEBUG, response.c_str());
-      digitalWrite(panel->pin_indicator, HIGH);
-      panel->pending_http = false;
-      http_delay = DEFAULT_HTTP_DELAY;
-      success = true;
-    } else {
-      logger.log(MYLOG, ERROR, "HTTP failed, retry %d: %s", retry,
-                 http.errorToString(response_code).c_str());
-      http_delay =
-          min(http_delay_max, (uint32_t)(http_delay * http_delay_backoff));
-      delay(100); // Short delay between retries
-    }
-    http.end();
-  }
-}
-
-void check_wifi() {
-  if (now() >= lastWifiCheck + 60) {
-    lastWifiCheck = now();
-    wifi_status = WiFi.status();
-
-    if (wifi_status != WL_CONNECTED) {
-      logger.log(MYLOG, ERROR, "WiFi disconnected, attempting reconnect");
-      WiFi.disconnect();
-      delay(1000);
-      WiFi.begin(ssid, password);
-    }
-  }
-}
-
-void setup_wifi() {
-  // Connect to the WiFi network
-  WiFi.begin(ssid, password);
-  WiFi.mode(WIFI_STA);
-  Serial.print("Connecting...");
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
-  }
-
-  Serial.println();
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
-
-  // Register the devices name with mDNS
-  if (!MDNS.begin("catbox")) {
-    Serial.println("Error setting up MDNS responder!");
-    while (1) {
-      delay(1000);
-    }
-  }
-  Serial.println("mDNS responder started at catbox.local");
-
-  wifi_status = WiFi.status();
-}
-
 static void handle_poop_click() { panel_button_press(&panel_poop); }
 
 static void handle_food_click() { panel_button_press(&panel_food); }
 
 static void handle_water_click() { panel_button_press(&panel_water); }
-
-void fetch_data() {
-  HTTPClient http;
-  String url = String(String(SERVER_ROOT) + "/status");
-  http.begin(url.c_str());
-  http.GET();
-  String payload = http.getString();
-  http.end();
-  JSONVar data = JSON.parse(payload);
-
-  for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
-    panels[p]->last_pressed = timeinfo.tm_sec - int(data[panels[p]->id]);
-    panel_update_light(panels[p]);
-  }
-}

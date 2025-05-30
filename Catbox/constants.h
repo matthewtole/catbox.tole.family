@@ -1,0 +1,8 @@
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
+
+#include "secrets.h"
+
+#define MYLOG 0
+
+#endif
