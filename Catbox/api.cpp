@@ -26,7 +26,6 @@ void update_delay() {
 
 void send_data(Panel *panel) {
   if (WiFi.status() != WL_CONNECTED) {
-    logger.log(MYLOG, ERROR, "Not connected");
     return;
   }
 
@@ -34,7 +33,6 @@ void send_data(Panel *panel) {
   http.setTimeout(10000); // 10 second timeout
 
   String url = String(String(SERVER_ROOT) + "/update?id=" + String(panel->id));
-  logger.log(MYLOG, DEBUG, "send_data_task: %s", url.c_str());
 
   bool success = false;
   for (int retry = 0; retry < 3 && !success; retry++) {
@@ -48,8 +46,6 @@ void send_data(Panel *panel) {
       return;
     }
 
-    logger.log(MYLOG, ERROR, "HTTP failed, retry %d: %s", retry,
-               http.errorToString(response_code).c_str());
     update_delay();
     delay(100); // Short delay between retries
   }

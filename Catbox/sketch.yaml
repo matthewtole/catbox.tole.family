@@ -1,0 +1,5 @@
+default_port: /dev/cu.usbmodem01
+default_fqbn: esp32:esp32:esp32
+
+build_properties:
+  build.partitions: huge_app

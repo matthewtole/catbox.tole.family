@@ -3,7 +3,8 @@
 
 #include "secrets.h"
 
-#define MYLOG 0
+#define PRODUCT_ID "catbox"
+#define PRODUCT_VERSION "4.0.0"
 
 #define DEFAULT_HTTP_DELAY 500
 #define NUM_PANELS 3

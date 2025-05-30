@@ -2,7 +2,6 @@
 #define API_H
 
 #include <Arduino_JSON.h>
-#include <Elog.h>
 #include <HTTPClient.h>
 
 #include "config.h"

@@ -1,22 +1,26 @@
-#include <Elog.h>
+#include <Arduino.h>
 
 #include "config.h"
+#include "timeinfo.h"
 #include "wifi-manager.h"
 
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
-time_t lastWifiCheck = 0;
+unsigned long last_wifi_check = 0;
 uint8_t wifi_status = WL_IDLE_STATUS;
 
+#define WIFI_CHECK_INTERVAL 60 * 1000
+#define WIFI_RECONNECT_INTERVAL 10 * 1000
+
 void check_wifi() {
-  if (now() >= lastWifiCheck + 60) {
-    lastWifiCheck = now();
+  if (mktime(&timeinfo) >= last_wifi_check + WIFI_CHECK_INTERVAL) {
+    last_wifi_check = mktime(&timeinfo);
     wifi_status = WiFi.status();
 
     if (wifi_status != WL_CONNECTED) {
-      logger.log(MYLOG, ERROR, "WiFi disconnected, attempting reconnect");
+      Serial.println("WiFi disconnected, attempting reconnect");
       WiFi.disconnect();
-      delay(1000);
+      delay(WIFI_RECONNECT_INTERVAL);
       WiFi.begin(ssid, password);
     }
   }

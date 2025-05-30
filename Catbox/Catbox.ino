@@ -1,9 +1,7 @@
 #include "config.h"
 
 #include <Arduino.h>
-#include <AsyncTCP.h>
-#include <ESPmDNS.h>
-#include <Wire.h>
+#include <PrettyOTA.h>
 
 #include "api.h"
 #include "display.h"
@@ -13,10 +11,11 @@
 #include "wifi-manager.h"
 
 Display *display;
+AsyncWebServer server(80);
+PrettyOTA OTAUpdates;
 
 void setup() {
   Serial.begin(115200);
-  logger.registerSerial(MYLOG, DEBUG, "tst");
   display = create_display(panels);
 
   display_setup(display);
@@ -28,8 +27,16 @@ void setup() {
       xTaskCreate(background_task, "background_task", 8192, NULL, 2, NULL);
 
   if (taskCreated != pdPASS) {
-    logger.log(MYLOG, ERROR, "Failed to create background task");
+    Serial.println("Failed to create background task");
+    delay(1000);
+    ESP.restart();
   }
+
+  OTAUpdates.Begin(&server);
+  OTAUpdates.SetHardwareID(PRODUCT_ID);
+  OTAUpdates.SetAppVersion(PRODUCT_VERSION);
+  PRETTY_OTA_SET_CURRENT_BUILD_TIME_AND_DATE();
+  server.begin();
 
   display_set_mode(display, DISPLAY_MODE_STATUS);
 }

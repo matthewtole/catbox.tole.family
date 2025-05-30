@@ -1,5 +1,3 @@
-#include <Elog.h>
-
 #include "./fonts/PicoPixel.h"
 
 #include "display.h"
@@ -36,8 +34,6 @@ void _draw_text(Display *self, const char *text, uint8_t x, uint8_t y,
 #define CENTER_X (DISPLAY_WIDTH / 2)
 #define CENTER_Y (DISPLAY_HEIGHT / 2)
 
-#define MYLOG 0
-
 Display *create_display(Panel *panels[NUM_PANELS]) {
   Display *display = new Display();
   display->mode = DISPLAY_MODE_BOOT;
@@ -50,7 +46,9 @@ Display *create_display(Panel *panels[NUM_PANELS]) {
 
 void display_setup(Display *self) {
   if (!self->display->begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    logger.log(MYLOG, ERROR, "SSD1306 allocation failed");
+    Serial.println("SSD1306 allocation failed");
+    delay(1000);
+    ESP.restart();
   }
   display_loop(self);
 }
@@ -87,7 +85,7 @@ void display_draw_boot(Display *self) {
   // TODO: Automate this center alignment work
   self->display->setTextColor(BLACK);
   self->display->setCursor(26, 33);
-  self->display->print("CATBOX v4.0.0");
+  self->display->print("CATBOX v" PRODUCT_VERSION);
 
   // TODO: Make this actually reflect something
   self->display->drawRect(8, 48, 112, 8, 1);

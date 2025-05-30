@@ -57,7 +57,6 @@ void panels_loop() {
 void panels_send_data() {
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
     if (panels[p]->pending_http) {
-      logger.log(MYLOG, DEBUG, "%s has a pending HTTP request", panels[p]->id);
       send_data(panels[p]);
       break;
     }

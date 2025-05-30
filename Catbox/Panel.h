@@ -1,9 +1,8 @@
 #ifndef PANEL_H
 #define PANEL_H
 
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_NeoPixel.h>
 #include <OneButton.h>
-#include <WS2812FX.h>
 
 #define DAY_HOURS 24
 #define RING_UPDATE_INTERVAL 60
@@ -12,7 +11,7 @@
 
 struct Panel {
   char id[6];
-  WS2812FX *ring;
+  Adafruit_NeoPixel *ring;
   uint8_t pin_ring;
   uint8_t pin_button;
   uint8_t pin_indicator;
