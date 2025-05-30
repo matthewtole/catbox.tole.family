@@ -8,8 +8,8 @@
 #include "Display.h"
 #include "Panel.h"
 #include "api.h"
-#include "catbox_network.h"
-#include "panels.h"
+#include "panel-manager.h"
+#include "wifi-manager.h"
 
 // Generated using this online tool
 // https://jrabausch.github.io/lcd-image/web/

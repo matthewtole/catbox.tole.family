@@ -6,8 +6,8 @@
 #include <HTTPClient.h>
 
 #include "Panel.h"
-#include "catbox_network.h"
 #include "config.h"
+#include "wifi-manager.h"
 
 extern uint32_t http_delay;
 

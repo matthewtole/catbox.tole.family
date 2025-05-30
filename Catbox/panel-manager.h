@@ -1,5 +1,5 @@
-#ifndef PANELS_H
-#define PANELS_H
+#ifndef PANEL_MANAGER_H
+#define PANEL_MANAGER_H
 
 #include "Panel.h"
 #include "config.h"

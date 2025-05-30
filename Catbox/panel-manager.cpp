@@ -1,5 +1,6 @@
-#include "panels.h"
+#include "panel-manager.h"
 #include "api.h"
+#include "config.h"
 
 Panel panel_poop = {
     .id = "poop",

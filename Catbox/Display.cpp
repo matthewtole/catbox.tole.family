@@ -1,7 +1,9 @@
-#include "Display.h"
-#include "PicoPixel.h"
-#include "catbox_network.h"
 #include <Elog.h>
+
+#include "PicoPixel.h"
+
+#include "Display.h"
+#include "wifi-manager.h"
 
 static const unsigned char PROGMEM logo[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x81, 0xc0, 0x07, 0xc3, 0xc0,

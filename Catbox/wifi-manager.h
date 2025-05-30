@@ -1,5 +1,5 @@
-#ifndef CATBOX_NETWORK_H
-#define CATBOX_NETWORK_H
+#ifndef WIFI_MANAGER_H
+#define WIFI_MANAGER_H
 
 // System includes first
 #include <Arduino.h>

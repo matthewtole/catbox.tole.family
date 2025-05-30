@@ -1,4 +1,4 @@
-#include "catbox_network.h"
+#include "wifi-manager.h"
 #include "config.h"
 
 const char *ssid = WIFI_SSID;
