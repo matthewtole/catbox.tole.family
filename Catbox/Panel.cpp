@@ -25,11 +25,14 @@ void panel_setup(Panel *panel, tm *timeinfo) {
   digitalWrite(panel->pin_indicator, HIGH);
 }
 
-void panel_button_press(Panel *panel) {
-  digitalWrite(panel->pin_indicator, LOW);
+void panel_set_pending(Panel *panel, bool pending) {
+  panel->pending_http = pending;
+  digitalWrite(panel->pin_indicator, pending ? LOW : HIGH);
+}
 
+void panel_button_press(Panel *panel) {
+  panel_set_pending(panel, true);
   panel->last_pressed = mktime(panel->timeinfo);
-  panel->pending_http = true;
   panel_update_light(panel);
 }
 

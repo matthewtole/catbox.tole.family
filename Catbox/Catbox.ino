@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPmDNS.h>
@@ -5,8 +7,8 @@
 
 #include "Display.h"
 #include "Panel.h"
+#include "api.h"
 #include "catbox_network.h"
-#include "constants.h"
 #include "panels.h"
 
 // Generated using this online tool

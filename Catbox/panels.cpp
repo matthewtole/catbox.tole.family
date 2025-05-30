@@ -1,5 +1,5 @@
 #include "panels.h"
-#include "catbox_network.h"
+#include "api.h"
 
 Panel panel_poop = {
     .id = "poop",

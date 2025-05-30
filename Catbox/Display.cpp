@@ -1,5 +1,6 @@
 #include "Display.h"
 #include "PicoPixel.h"
+#include "catbox_network.h"
 #include <Elog.h>
 
 static const unsigned char PROGMEM logo[] = {
@@ -123,8 +124,8 @@ void display_draw_status(Display *self) {
 
   //   FOOTER
   self->display->drawLine(0, 52, 128, 52, WHITE);
-  _draw_text(self, String(WiFi.localIP()).c_str(), 4, 60, NULL, BLACK);
-  _draw_text(self, String(WiFi.SSID()).c_str(), 86, 60, NULL, BLACK);
+  _draw_text(self, get_wifi_ssid().c_str(), 4, 60, NULL, BLACK);
+  _draw_text(self, get_ip_address().c_str(), 86, 60, NULL, BLACK);
 
   self->display->display();
 }

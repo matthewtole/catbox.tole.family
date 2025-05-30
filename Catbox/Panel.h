@@ -33,5 +33,6 @@ void panel_button_press(Panel *panel);
 void panel_loop(Panel *panel);
 void panel_post_data(Panel *panel);
 void panel_update_light(Panel *panel);
+void panel_set_pending(Panel *panel, bool pending);
 
 #endif // PANEL_H

@@ -3,10 +3,8 @@
 
 // System includes first
 #include <Arduino.h>
-#include <Arduino_JSON.h>
 #include <AsyncTCP.h>
 #include <ESPmDNS.h>
-#include <HTTPClient.h>
 #include <WiFi.h>
 #include <Wire.h>
 
@@ -18,16 +16,13 @@
 struct Display;
 struct Panel;
 
-// Constants
-#define DEFAULT_HTTP_DELAY 500
-
 // External declarations
-extern uint32_t http_delay;
+extern uint8_t status;
 
 // Function declarations
 void check_wifi();
 void setup_wifi();
-void fetch_data(Panel **panels, tm *timeinfo);
-void send_data(Panel *panel);
+String get_wifi_ssid();
+String get_ip_address();
 
 #endif

@@ -2,6 +2,7 @@
 #define PANELS_H
 
 #include "Panel.h"
+#include "config.h"
 
 #define PIN_POOP_RING 15
 #define PIN_POOP_BUTTON 25
@@ -21,7 +22,6 @@ static void handle_poop_click();
 static void handle_food_click();
 static void handle_water_click();
 
-#define NUM_PANELS 3
 extern Panel *panels[NUM_PANELS];
 
 void setup_panels(tm *timeinfo);
