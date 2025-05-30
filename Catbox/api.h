@@ -11,7 +11,7 @@
 
 extern uint32_t http_delay;
 
-void fetch_data(Panel **panels, tm *timeinfo);
+void fetch_data(Panel **panels);
 void send_data(Panel *panel);
 
 #endif

@@ -37,9 +37,9 @@ static void handle_food_click() { panel_button_press(&panel_food); }
 
 static void handle_water_click() { panel_button_press(&panel_water); }
 
-void setup_panels(tm *timeinfo) {
+void setup_panels() {
   for (uint8_t p = 0; p < NUM_PANELS; p += 1) {
-    panel_setup(panels[p], timeinfo);
+    panel_setup(panels[p]);
   }
 
   panel_poop.button->attachClick(handle_poop_click);

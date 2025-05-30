@@ -9,37 +9,20 @@
 #include "display.h"
 #include "panel-manager.h"
 #include "panel.h"
+#include "timeinfo.h"
 #include "wifi-manager.h"
-
-// Generated using this online tool
-// https://jrabausch.github.io/lcd-image/web/
-
-static const uint8_t logo[72] = {
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x80, 0x07, 0x83, 0xc0, 0x07, 0xc7, 0xe0,
-    0x07, 0xe7, 0xc0, 0x07, 0xe7, 0xe0, 0x07, 0xe7, 0xc0, 0x23, 0xc7, 0xc4,
-    0xf1, 0xc3, 0x8f, 0xf8, 0x00, 0x1f, 0xf8, 0x10, 0x1f, 0x78, 0x7e, 0x1e,
-    0x79, 0xff, 0x9e, 0x11, 0xff, 0xc8, 0x03, 0xff, 0xc0, 0x07, 0xff, 0xe0,
-    0x0f, 0xff, 0xf0, 0x0f, 0xff, 0xf0, 0x1f, 0xff, 0xf8, 0x1f, 0xff, 0xf8,
-    0x1f, 0xff, 0xf8, 0x1f, 0xc5, 0xf0, 0x04, 0x00, 0x20, 0x00, 0x00, 0x00};
-
-struct tm timeinfo;
-const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 0;
-const int daylightOffset_sec = 3600;
 
 Display *display;
 
 void setup() {
   Serial.begin(115200);
   logger.registerSerial(MYLOG, DEBUG, "tst");
-  display = create_display(panels, &timeinfo);
+  display = create_display(panels);
+
   display_setup(display);
-
-  setup_panels(&timeinfo);
-
+  setup_panels();
   setup_wifi();
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  fetch_data(panels, &timeinfo);
+  fetch_data(panels);
 
   BaseType_t taskCreated =
       xTaskCreate(background_task, "background_task", 8192, NULL, 2, NULL);
@@ -62,7 +45,7 @@ bool should_update_display() {
 }
 
 void loop() {
-  getLocalTime(&timeinfo);
+  timeinfo_loop();
   panels_loop();
 
   if (should_update_display()) {

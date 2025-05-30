@@ -17,10 +17,9 @@ struct Display {
   Adafruit_SSD1306 *display;
   char error_message[100];
   Panel **panels;
-  tm *timeinfo;
 };
 
-Display *create_display(Panel *panels[NUM_PANELS], tm *timeinfo);
+Display *create_display(Panel *panels[NUM_PANELS]);
 void display_setup(Display *self);
 void display_loop(Display *self);
 void display_set_mode(Display *self, DisplayMode mode);

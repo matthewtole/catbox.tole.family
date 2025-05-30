@@ -24,7 +24,7 @@ static void handle_water_click();
 
 extern Panel *panels[NUM_PANELS];
 
-void setup_panels(tm *timeinfo);
+void setup_panels();
 void panels_loop();
 void panels_send_data();
 

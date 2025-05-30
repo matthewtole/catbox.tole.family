@@ -3,6 +3,7 @@
 #include "./fonts/PicoPixel.h"
 
 #include "display.h"
+#include "timeinfo.h"
 #include "wifi-manager.h"
 
 static const unsigned char PROGMEM logo[] = {
@@ -21,7 +22,6 @@ void display_draw_boot(Display *display);
 void display_draw_status(Display *display);
 void display_draw_error(Display *display);
 
-int get_hours(tm *timeinfo, unsigned long time);
 void _draw_text(Display *self, const char *text, uint8_t x, uint8_t y,
                 const GFXfont *font, uint8_t color);
 
@@ -38,14 +38,13 @@ void _draw_text(Display *self, const char *text, uint8_t x, uint8_t y,
 
 #define MYLOG 0
 
-Display *create_display(Panel *panels[NUM_PANELS], tm *timeinfo) {
+Display *create_display(Panel *panels[NUM_PANELS]) {
   Display *display = new Display();
   display->mode = DISPLAY_MODE_BOOT;
   strcpy(display->error_message, "");
   display->display =
       new Adafruit_SSD1306(DISPLAY_WIDTH, DISPLAY_HEIGHT, &Wire, -1);
   display->panels = panels;
-  display->timeinfo = timeinfo;
   return display;
 }
 
@@ -100,8 +99,7 @@ void display_draw_boot(Display *self) {
 void _draw_status_panel(Display *self, Panel *panel, uint8_t x, uint8_t y,
                         bool align_right) {
   _draw_text(self, String(panel->label).c_str(), x, y, &Picopixel, WHITE);
-  sprintf(panel->label, "%05d",
-          min(99999, get_hours(panel->timeinfo, panel->last_pressed)));
+  sprintf(panel->label, "%05d", min(99999, get_hours(panel->last_pressed)));
   _draw_text(self, panel->label, x, y + 3, NULL, WHITE);
 }
 
@@ -120,7 +118,7 @@ void display_draw_status(Display *self) {
 
   // CLOCK
   static char clock_text[10];
-  strftime(clock_text, sizeof(clock_text), "%H:%M:%S", self->timeinfo);
+  strftime(clock_text, sizeof(clock_text), "%H:%M:%S", &timeinfo);
   _draw_text(self, "CLOCK", 60, 39, &Picopixel, WHITE);
   _draw_text(self, clock_text, 60, 42, NULL, WHITE);
 
@@ -167,8 +165,4 @@ void _draw_text(Display *self, const char *text, uint8_t x, uint8_t y,
   self->display->setCursor(x, y);
   self->display->setTextColor(color);
   self->display->print(text);
-}
-
-int get_hours(tm *timeinfo, unsigned long time) {
-  return (int)((timeinfo->tm_sec - time) / (HOUR_SEC));
 }

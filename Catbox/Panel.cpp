@@ -1,11 +1,11 @@
 #include <HTTPClient.h>
 
 #include "panel.h"
+#include "timeinfo.h"
 
 #define RING_PIXELS 8
 
-void panel_setup(Panel *panel, tm *timeinfo) {
-  panel->timeinfo = timeinfo;
+void panel_setup(Panel *panel) {
   panel->last_pressed = 0;
   panel->ring_next_update = 0;
   panel->pending_http = false;
@@ -33,12 +33,12 @@ void panel_set_pending(Panel *panel, bool pending) {
 
 void panel_button_press(Panel *panel) {
   panel_set_pending(panel, true);
-  panel->last_pressed = mktime(panel->timeinfo);
+  panel->last_pressed = mktime(&timeinfo);
   panel_update_light(panel);
 }
 
 void panel_update_light(Panel *panel) {
-  if ((panel->timeinfo->tm_sec - panel->last_pressed) >= panel->duration) {
+  if ((timeinfo.tm_sec - panel->last_pressed) >= panel->duration) {
     panel->ring->setColor(panel->color);
   } else {
     panel->ring->setColor(BLACK);
@@ -47,9 +47,9 @@ void panel_update_light(Panel *panel) {
 }
 
 void panel_loop(Panel *panel) {
-  if (panel->timeinfo->tm_sec >= panel->ring_next_update) {
+  if (timeinfo.tm_sec >= panel->ring_next_update) {
     panel_update_light(panel);
-    panel->ring_next_update = panel->timeinfo->tm_sec + RING_UPDATE_INTERVAL;
+    panel->ring_next_update = timeinfo.tm_sec + RING_UPDATE_INTERVAL;
   }
   panel->ring->service();
 }
