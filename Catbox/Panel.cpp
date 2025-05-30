@@ -1,5 +1,6 @@
-#include "Panel.h"
 #include <HTTPClient.h>
+
+#include "panel.h"
 
 #define RING_PIXELS 8
 

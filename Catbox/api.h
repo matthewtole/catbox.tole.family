@@ -5,8 +5,8 @@
 #include <Elog.h>
 #include <HTTPClient.h>
 
-#include "Panel.h"
 #include "config.h"
+#include "panel.h"
 #include "wifi-manager.h"
 
 extern uint32_t http_delay;

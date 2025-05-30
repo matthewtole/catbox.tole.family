@@ -1,8 +1,8 @@
 #ifndef PANEL_MANAGER_H
 #define PANEL_MANAGER_H
 
-#include "Panel.h"
 #include "config.h"
+#include "panel.h"
 
 #define PIN_POOP_RING 15
 #define PIN_POOP_BUTTON 25

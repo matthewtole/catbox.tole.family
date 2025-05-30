@@ -5,10 +5,10 @@
 #include <ESPmDNS.h>
 #include <Wire.h>
 
-#include "Display.h"
-#include "Panel.h"
 #include "api.h"
+#include "display.h"
 #include "panel-manager.h"
+#include "panel.h"
 #include "wifi-manager.h"
 
 // Generated using this online tool

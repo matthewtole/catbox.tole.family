@@ -8,15 +8,8 @@
 #include <WiFi.h>
 #include <Wire.h>
 
-// Local includes last
-#include "Panel.h"
-#include "constants.h"
+#include "config.h"
 
-// Forward declarations to avoid circular dependencies
-struct Display;
-struct Panel;
-
-// External declarations
 extern uint8_t status;
 
 // Function declarations

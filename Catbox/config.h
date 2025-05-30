@@ -3,7 +3,6 @@
 
 #include "secrets.h"
 
-#include <Elog.h>
 #define MYLOG 0
 
 #define DEFAULT_HTTP_DELAY 500

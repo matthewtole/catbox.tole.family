@@ -4,7 +4,7 @@
 #include <Adafruit_SSD1306.h>
 #include <WiFiClient.h>
 
-#include "Panel.h"
+#include "panel.h"
 
 enum DisplayMode {
   DISPLAY_MODE_BOOT,

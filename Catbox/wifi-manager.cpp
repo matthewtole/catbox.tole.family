@@ -1,5 +1,7 @@
-#include "wifi-manager.h"
+#include <Elog.h>
+
 #include "config.h"
+#include "wifi-manager.h"
 
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;

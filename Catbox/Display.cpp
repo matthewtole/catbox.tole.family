@@ -2,7 +2,7 @@
 
 #include "./fonts/PicoPixel.h"
 
-#include "Display.h"
+#include "display.h"
 #include "wifi-manager.h"
 
 static const unsigned char PROGMEM logo[] = {
