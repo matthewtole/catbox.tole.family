@@ -19,8 +19,10 @@ const panels = {
 
 function updatePanel(id, data) {
   const element = panels[id].element;
-  element.querySelector(".time").innerText = DateTime.now().minus({seconds: data}).toRelative();
-  if (data.lastPressed >= panels[id].delay) {
+  element.querySelector(".time").innerText = DateTime.now()
+    .minus({ seconds: data })
+    .toRelative();
+  if (data >= panels[id].delay) {
     element.setAttribute("data-mode", "on");
   } else {
     element.setAttribute("data-mode", "off");
@@ -32,7 +34,9 @@ async function fetchData() {
     return;
   }
   refresh.classList.add("active");
-  const res = await axios.get("https://matthewtole--5aad334ee66c11ef8859e6cdfca9ef9f.web.val.run/status");
+  const res = await axios.get(
+    "https://matthewtole--5aad334ee66c11ef8859e6cdfca9ef9f.web.val.run/status"
+  );
   updatePanel("poop", res.data.poop);
   updatePanel("water", res.data.water);
   updatePanel("food", res.data.food);
